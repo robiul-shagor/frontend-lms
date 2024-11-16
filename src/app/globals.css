@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.bg-custom-theme {
+  background-image: url("/assets/images/listing/Bg Shape.png"); /* Adjust the path as needed */
+  background-size: contain;
+  height: auto;
+  width: full; /* Adjust the height as needed */
+}
+
+.custom-hero-theme {
+  background-image: url("/assets/images/hero/Bg Shape.png"); /* Adjust the path as needed */
+  background-size: cover;
+  background-repeat: no-repeat;
+  height: full;
+  width: full; /* Adjust the height as needed */
+}
+
+.custom-market-theme {
+  background-image: url("/assets/images/market/hero-bg.png"); /* Adjust the path as needed */
+  background-size: cover;
+  background-repeat: no-repeat;
+  height: full;
+  width: full; /* Adjust the height as needed */
+}
+
+.custom-market-theme2 {
+  background-image: url("/assets/images/market/bg-last.png"); /* Adjust the path as needed */
+  background-size: cover;
+  background-repeat: no-repeat;
+  height: full;
+  width: full; /* Adjust the height as needed */
+}
+
+.bg-gradient3 {
+  background-image: linear-gradient(to right, #c8b3ff, #94abff);
+}
+
+.bg-gradient2 {
+  background-image: linear-gradient(to right, #dcdbff, #f4fff2);
+}
+
+.bg-gradient4 {
+  background-image: linear-gradient(to right, #96dfff, #6485fc);
+}
+
+.bg-gradient5 {
+  background-image: linear-gradient(to right, #7d7aed, #c3c1ff);
+}
+
+/* For a specific scrollable div */
+.scrollable {
+  overflow: auto; /* Ensure it can scroll */
+}
+
+.scrollable::-webkit-scrollbar {
+  display: none; /* Hide scrollbar */
+}
+
+.scrollable {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
