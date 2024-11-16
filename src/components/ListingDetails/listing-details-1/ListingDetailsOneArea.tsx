@@ -97,7 +97,7 @@ const ListingDetailsOneArea = () => {
               <CommonBanner data={propertyData} />
               <MediaGallery data={propertyData} />
             </div>
-            <CommonPropertyOverview data={propertyData} />
+            <CommonPropertyOverview data={propertyData.propertyDetails} />
           </div>
           <div className="md:flex justify-between items-start md:w-[98%] my-2 w-full m-auto">
             <div className="md:w-[70%] w-full">

@@ -343,7 +343,7 @@ const ListingThirteenArea = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:3939/api/properties/?page=1&PropertyType=Residential');
+            const response = await fetch('https://api-lms-alpha.vercel.app/api/properties/?page=1&PropertyType=Residential');
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }

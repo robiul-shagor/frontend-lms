@@ -19,15 +19,13 @@ interface DataType {
 
 interface CommonPropertyOverviewProps {
   data: {
-    propertyDetails: {
-      PropertySubType: string;
-      BedroomsTotal: string;
-      BathroomsTotalInteger: string;
-      LivingAreaRange: string;
-      LotSizeDimensions: string;
-      BasementDescription: string;
-      ApproximateAge: string;
-    };
+    PropertySubType: string;
+    BedroomsTotal: string;
+    BathroomsTotalInteger: string;
+    LivingAreaRange: string;
+    LotSizeDimensions: string;
+    BasementDescription: string;
+    ApproximateAge: string;
   };
 }
 
@@ -43,43 +41,43 @@ const CommonPropertyOverview = ({ data }: CommonPropertyOverviewProps ) => {
     {
       id: 1,
       icon: icon_5,
-      value: data.propertyDetails.PropertySubType,
+      value: data.PropertySubType,
       title: "Type",
     },
     {
       id: 2,
       icon: icon_2,
-      value: data.propertyDetails.BedroomsTotal,
+      value: data.BedroomsTotal,
       title: "Bed",
     },
     {
       id: 3,
       icon: icon_3,
-      value: data.propertyDetails.BathroomsTotalInteger,
+      value: data.BathroomsTotalInteger,
       title: "Bath",
     },
     {
       id: 4,
       icon: <HiArrowPathRoundedSquare />,
-      value: data.propertyDetails.LivingAreaRange,
+      value: data.LivingAreaRange,
       title: "Sqft.",
     },
     {
       id: 5,
       icon: icon_1,
-      value: data.propertyDetails.LotSizeDimensions,
+      value: data.LotSizeDimensions,
       title: "Lot",
     },
     {
       id: 6,
       icon: "/assets/images/icon/basement.png",
-      value: data.propertyDetails.BasementDescription,
+      value: data.BasementDescription,
       title: "Basement",
     },
     {
       id: 7,
       icon: <GoHourglass />,
-      value: data.propertyDetails.ApproximateAge,
+      value: data.ApproximateAge,
       title: "Age",
     },
   ];

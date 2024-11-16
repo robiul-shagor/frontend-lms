@@ -45,7 +45,7 @@
 
 export const fetchIndiviualPropertyData = async (key) => {
     try {
-      const response = await fetch(`http://localhost:3939/api/properties/${key}`);
+      const response = await fetch(`https://api-lms-alpha.vercel.app/api/properties/${key}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
