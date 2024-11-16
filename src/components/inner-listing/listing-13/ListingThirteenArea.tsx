@@ -182,7 +182,8 @@ interface ErrorState {
 }
 interface ApiResponse {
   success: boolean;
-  properties: Property[];  // Define 'properties' based on its structure in the API
+  properties: Property[];
+  totalProperties: number  // Define 'properties' based on its structure in the API
 }
 
 interface Property {
@@ -191,7 +192,6 @@ interface Property {
 }
 
 const ListingThirteenArea = () => {
-  const itemsPerPage = 10;
   const page = "listing_5";
   const maxPageBoxes = 10; // Limit to show max 15 page numbers
 
@@ -224,26 +224,26 @@ const ListingThirteenArea = () => {
       value: "commercial",
     },
   ];
-  const {
-    itemOffset,
-    sortedProperties,
-    currentItems,
-    // pageCount,
-    // handlePageClick,
-    handleBathroomChange,
-    handleBedroomChange,
-    handleSearchChange,
-    handlePriceChange,
-    maxPrice,
-    priceValue,
-    resetFilters,
-    selectedAmenities,
-    handleAmenityChange,
-    handleLocationChange,
-    handleStatusChange,
-    handleTypeChange,
-    handlePriceDropChange,
-  } = UseShortedProperty({ itemsPerPage, page });
+  // const {
+  //   itemOffset,
+  //   sortedProperties,
+  //   currentItems,
+  //   // pageCount,
+  //   // handlePageClick,
+  //   handleBathroomChange,
+  //   handleBedroomChange,
+  //   handleSearchChange,
+  //   handlePriceChange,
+  //   maxPrice,
+  //   priceValue,
+  //   resetFilters,
+  //   selectedAmenities,
+  //   handleAmenityChange,
+  //   handleLocationChange,
+  //   handleStatusChange,
+  //   handleTypeChange,
+  //   handlePriceDropChange,
+  // } = UseShortedProperty({ itemsPerPage, page });
 
   const [pageCount, setPageCount] = useState(0);
   const [show, setShow] = useState(false);
@@ -259,6 +259,11 @@ const ListingThirteenArea = () => {
   const [selectedOptions, setSelectedOptions] = useState<{
     [key: number]: string;
   }>({});
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPages, setItemsPerPages] = useState(10); // Defaults to 10
+  const [totalProperties, setTotalProperties] = useState(0);
+
   const [styleView, setStyleView] = useState("grid");
   const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(
     null
@@ -330,7 +335,7 @@ const ListingThirteenArea = () => {
     setStyleView(styleView === "grid" ? "list" : "grid");
   };
   const handleResetFilter = () => {
-    resetFilters();
+    //resetFilters();
   };
 
   const override: CSSProperties = {
@@ -342,15 +347,18 @@ const ListingThirteenArea = () => {
   useEffect(() => {
     const fetchData = async () => {
         setIsLoading(true);
+        
         try {
-            const response = await fetch('https://api-lms-alpha.vercel.app/api/properties/?page=1&PropertyType=Residential');
+            const response = await fetch('https://api-lms-alpha.vercel.app/api/properties/?page=${currentPage}&limit=${itemsPerPages}&PropertyType=Residential');
+            
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
             const result: ApiResponse = await response.json();
             if (result?.properties) {
               setpropertiesData(result.properties);
-              
+            
+              setTotalProperties(result.totalProperties); 
             } else {
               setError('API responded with an error');
             }
@@ -365,7 +373,19 @@ const ListingThirteenArea = () => {
     };
 
     fetchData();
-}, []);
+  }, [currentPage, itemsPerPages]);
+
+
+
+  // Calculate range
+  const startIndex = (currentPage - 1) * itemsPerPages + 1;
+  const endIndex = Math.min(currentPage * itemsPerPages, totalProperties);
+
+  const totalPages = Math.ceil(totalProperties / itemsPerPages); // Calculate total pages
+
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber); // Update current page
+  };
 
   if (loading) {
     return (
@@ -704,7 +724,7 @@ const ListingThirteenArea = () => {
                     Showing{" "}
                     <span className="font-abhaya text-black">
                       {" "}
-                      1-8 of 1,230{" "}
+                      {startIndex}-{endIndex} of {totalProperties}
                     </span>{" "}
                     results
                   </div>
@@ -1018,23 +1038,25 @@ const ListingThirteenArea = () => {
           </div> */}
         </div>
       </div>
-      
+
       <div className="flex justify-center items-center gap-4 mb-[80px] -mt-[130px]">
-        <div className="flex  gap-2 justify-between items-center text-black ">
-          <div className="hover:text-white hover:bg-[#aeacff] hover:p-2 w-[30px] h-[30px] flex justify-center items-center cursor-pointer text-[17px]">
-            1
-          </div>
-          <div className="hover:text-white hover:bg-[#aeacff] hover:p-2 w-[30px] h-[30px] flex justify-center items-center cursor-pointer text-[17px]">
-            2
-          </div>
-          <div className="hover:text-white hover:bg-[#aeacff] hover:p-2 w-[30px] h-[30px] flex justify-center items-center cursor-pointer text-[17px]">
-            3
-          </div>
-          <div className="hover:text-white hover:bg-[#aeacff] hover:p-2 w-[30px] h-[30px] flex justify-center items-center cursor-pointer text-[17px]">
-            4...
-          </div>
+        <div className="flex gap-2 justify-between items-center text-black">
+          {Array.from({ length: totalPages }, (_, index) => (
+            <div
+              key={index + 1}
+              className={`hover:text-white hover:bg-[#aeacff] hover:p-2 w-[30px] h-[30px] flex justify-center items-center cursor-pointer text-[17px] ${
+                currentPage === index + 1 ? "bg-[#6965FD] text-white" : ""
+              }`}
+              onClick={() => handlePageChange(index + 1)}
+            >
+              {index + 1}
+            </div>
+          ))}
         </div>
-        <div className="flex justify-start gap-2 items-center text-[17px]  text-black cursor-pointer">
+        <div
+          className="flex justify-start gap-2 items-center text-[17px] text-black cursor-pointer"
+          onClick={() => handlePageChange(totalPages)}
+        >
           <p>Last</p>
           <HiOutlineArrowLongRight />
         </div>

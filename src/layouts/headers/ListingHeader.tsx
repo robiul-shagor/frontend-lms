@@ -58,16 +58,15 @@ const [openLoginModal, setopenLoginModal] = useState(false)
       >
         <Link
           href={'/'}
-          >
-        
+          >        
+          <Image
+            src="/assets/images/hero/logo.png"
+            width={134}
+            height={73}
+            alt="logo"
+            className="md:w-[134px] w-[110px] md:h-[73px] h-[63px]"
+          />
         </Link>
-        <Image
-          src="/assets/images/logo/logo_01.svg"
-          width={134}
-          height={73}
-          alt="logo"
-          className="lg:w-[134px] w-[110px] lg:h-[73px] sm:h-[63px] h-[40px]"
-        />
 
         <div className="lg:flex hidden justify-between items-center gap-5">
           {navItems.map((item, index) => (
