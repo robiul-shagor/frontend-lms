@@ -31,16 +31,16 @@ const CommonBanner = ({ style_3, data }: any) => {
       <div className="flex justify-between items-start ">
         <div className="flex flex-col justify-start items-start gap-0">
           <h2 className="font-medium md:text-[26px] sm:text-[16px] text-sm">
-            {`${data?.propertyDetails?.UnitNumber !== null ? `${data?.propertyDetails?.UnitNumber} -` : ""} ${
-            data?.propertyDetails?.StreetNumber
-            } ${data?.propertyDetails?.StreetName} ${data?.propertyDetails?.StreetSuffix}`}
+            {`${data?.UnitNumber !== null ? `${data?.UnitNumber} -` : ""} ${
+            data?.StreetNumber
+            } ${data?.StreetName} ${data?.StreetSuffix}`}
           </h2>
           <p className="md:text-[22px] sm:text-[16px] text-[12px]  text-[#7a7a7a] font-[500]">
-            {`${data?.propertyDetails?.UnparsedAddress !== null ? `${data?.propertyDetails?.UnparsedAddress}` : ""}`}
+            {`${data?.UnparsedAddress !== null ? `${data?.UnparsedAddress}` : ""}`}
           </p>
           <div className="flex gap-2 items-center">
           <div className="flex justify-center items-center text-[#7a7a7a] sm:text-[16px] text-[12px] bg-[#F8f8f8] border-1 border-[#7a7a7a]  rounded-[23px] w-fit h-[28px] px-2">
-            {`${data?.propertyDetails?.PropertyType !== null ? `${data?.propertyDetails?.PropertyType}` : ""}`}
+            {`${data?.PropertyType !== null ? `${data?.PropertyType}` : ""}`}
             </div>
           <p className="md:text-[18px] text-[16px] text-[#7a7a7a] font-[500] hidden">
           Peel
@@ -52,14 +52,14 @@ const CommonBanner = ({ style_3, data }: any) => {
         <div className=" md:mt-0 ">
           <div className="flex md:flex-row flex-col md:justify-end justify-start md:items-center gap-2">
             <div className="sm:flex hidden justify-center items-center text-white text-[12px] bg-[#6FE0A2]   rounded-[23px] w-[80.21px] h-[22px]">
-              {`${data?.propertyDetails?.TransactionType !== null ? `${data?.propertyDetails?.TransactionType}` : ""}`}
+              {`${data?.TransactionType !== null ? `${data?.TransactionType}` : ""}`}
             </div>
             <div className="text-black md:text-[26px] sm:text-[24px] text-[16px] font-[500] md:flex justify-end items-center">
-              Price: ${`${data?.propertyDetails?.ListPrice !== null ? `${data?.propertyDetails?.ListPrice}` : ""}`}
+              Price: ${`${data?.ListPrice !== null ? `${data?.ListPrice}` : ""}`}
             </div>
           </div>
           <p className=" text-[#7a7a7a] font-[500] md:text-[16px] sm:text-[14px] text-[12px] flex  justify-end md:text-right text-left">
-            Property Taxes: <span className="text-black ">${`${data?.propertyDetails?.TaxAnnualAmount !== null ? `${data?.propertyDetails?.TaxAnnualAmount}` : ""}`}/yr</span>
+            Property Taxes: <span className="text-black ">${`${data?.TaxAnnualAmount !== null ? `${data?.TaxAnnualAmount}` : ""}`}/yr</span>
           </p>
         </div>
       </div>
@@ -71,7 +71,7 @@ const CommonBanner = ({ style_3, data }: any) => {
             className="text-black md:text-[22px]
           "
           >
-            {calculateDurationToToday(data?.propertyDetails?.OriginalEntryTimestamp)}
+            {calculateDurationToToday(data?.OriginalEntryTimestamp)}
           </span>
         </p>
 

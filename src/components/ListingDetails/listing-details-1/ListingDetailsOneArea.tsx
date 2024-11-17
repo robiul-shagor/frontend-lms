@@ -16,7 +16,7 @@ import CommonPropertyVideoTour from "../listing-details-common/CommonPropertyVid
 import CommonReviewForm from "../listing-details-common/CommonReviewForm";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { fetchIndiviualPropertyData } from "@/services/api";
+import { fetchIndMediaPropertyData, fetchIndividualProperty } from "@/services/api";
 import Map from "./Map";
 // import { IoIosBed } from "react-icons/io";
 // import {
@@ -52,6 +52,7 @@ type AnyObject = Record<string, any>;
 
 const ListingDetailsOneArea = () => {
   const [propertyData, setpropertyData] = useState<AnyObject>({});
+  const [mediaData, setmediaData] = useState<AnyObject>({});
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,21 +60,33 @@ const ListingDetailsOneArea = () => {
   const key: any = params.get("id");
 
   useEffect(() => {
-    const fetchIndiviualProperty = async () => {
+    const fetchAllData = async () => {
       try {
-        const data = await fetchIndiviualPropertyData(key);
-        setpropertyData(data);
+        setLoading(true);
+  
+        const [propertyDataResponse, mediaDataResponse] = await Promise.all([
+          fetchIndividualProperty(key),
+          fetchIndMediaPropertyData(key),
+        ]);
+  
+        setpropertyData(propertyDataResponse);
+        if (mediaDataResponse && mediaDataResponse.value) {
+          setmediaData(mediaDataResponse);
+        } else {
+          console.warn("No media data found for key:", key);
+          setmediaData({}); // Fallback to empty object
+        }
       } catch (error) {
-        console.log(error);
-        setError("Failed to fetch property data");
+        console.error("Error fetching data:", error);
+        setError("Failed to fetch property or media data");
       } finally {
         setLoading(false);
       }
     };
-    fetchIndiviualProperty();
+  
+    fetchAllData();
   }, [key]);
 
-  console.log("propertyData", propertyData);
 
   if (loading) {
     return <div className="loading-spinner">Loading...</div>;
@@ -82,6 +95,8 @@ const ListingDetailsOneArea = () => {
   if (error) {
     return <div className="error-message">{error}</div>;
   }
+
+  console.log(mediaData);
 
   const selectHandler = (e: any) => {};
 
@@ -94,10 +109,10 @@ const ListingDetailsOneArea = () => {
         <div className="w-full ">
           <div className="md:w-[98%] w-full m-auto">
             <div className="flex sm:flex-col flex-col-reverse">
-              <CommonBanner data={propertyData} />
-              <MediaGallery data={propertyData} />
+              <CommonBanner data={propertyData.value[0]} />
+              <MediaGallery data={mediaData} />
             </div>
-            <CommonPropertyOverview data={propertyData.propertyDetails} />
+            <CommonPropertyOverview data={propertyData.value[0]} />
           </div>
           <div className="md:flex justify-between items-start md:w-[98%] my-2 w-full m-auto">
             <div className="md:w-[70%] w-full">
@@ -106,15 +121,15 @@ const ListingDetailsOneArea = () => {
                   Desription
                 </h4>
                 <p className=" md:text-[17px] text-[14px] font-lato text-[#4d4d4d]">
-                  {propertyData.propertyDetails.PublicRemarks}
+                  {propertyData.value[0].PublicRemarks}
                 </p>
               </div>
 
-              <ListingHistory propertyData={propertyData.propertyDetails} />
+              <ListingHistory propertyData={propertyData.value[0]} />
 
               <div className=" bg-white shadow-lg rounded-[18px] md:py-[20px] md:px-[35px] px-[20px] py-[20px] mt-3">
                 {/* DistinctiveOtherFee */}
-                <ListingInformation propertyData={propertyData} />
+                <ListingInformation propertyData={propertyData.value[0]} />
                 {/* <DistinctiveOtherFee propertyData={propertyData} /> */}
 
                 {/* Garage & Parkings */}

@@ -172,14 +172,20 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
               className="md:w-2/5 w-full flex justify-between items-center"
             >
               <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400] ">
-                Listed: {new Date(propertyData.propertyDetails.OriginalEntryTimestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                Listed:
+              </p> 
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">
+                {new Date(propertyData.OriginalEntryTimestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
             </div>         
             <div
               className="md:w-2/5 w-full flex justify-between items-center"
             >
               <p className="text-black md:text-[17px] text-[15px] font-[400] ">
-                MLS#: {propertyData.propertyDetails.ListingKey}
+                MLS#: 
+              </p>
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">
+                {propertyData.ListingKey}
               </p>
             </div>            
             
@@ -187,7 +193,10 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
               className="md:w-2/5 w-full flex justify-between items-center"
             >
               <p className="text-black md:text-[17px] text-[15px] font-[400] ">
-                Last Updated: {new Date(propertyData.propertyDetails.ModificationTimestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                Last Updated: 
+              </p>
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">
+                {new Date(propertyData.ModificationTimestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
             </div>            
             
@@ -197,13 +206,8 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
               <p className="text-black md:text-[17px] text-[15px] font-[400] ">
                 Posession: 
               </p>
-            </div>         
-            
-            <div
-              className="md:w-2/5 w-full flex justify-between items-center"
-            >
-              <p className="text-black md:text-[17px] text-[15px] font-[400] ">
-                Original Price: {propertyData.propertyDetails.OriginalListPrice}
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">
+                
               </p>
             </div>         
             
@@ -211,7 +215,21 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
               className="md:w-2/5 w-full flex justify-between items-center"
             >
               <p className="text-black md:text-[17px] text-[15px] font-[400] ">
-                Taxes: {propertyData.propertyDetails.TaxAnnualAmount}
+                Original Price: 
+              </p>
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">
+                {propertyData.OriginalListPrice}
+              </p>
+            </div>         
+            
+            <div
+              className="md:w-2/5 w-full flex justify-between items-center"
+            >
+              <p className="text-black md:text-[17px] text-[15px] font-[400] ">
+                Taxes: 
+              </p>
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">
+                {propertyData.TaxAnnualAmount}
               </p>
             </div>
           </div>
@@ -243,47 +261,47 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
           <div className="flex mt-3 w-full gap-3 rounded-4 flex-wrap justify-between items-center bg-white py-3 rounded-2">
             <div className="md:w-2/5 w-full flex justify-between items-center">
               <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400]">Bedrooms :</p>
-              <p className="text-black md:text-[17px] text-[15px] font-[400]">0{propertyData.propertyDetails.BedroomsTotal}</p>
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">0{propertyData.BedroomsTotal}</p>
             </div>         
             
             <div className="md:w-2/5 w-full flex justify-between items-center">
               <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400]">Bathrooms :</p>
-              <p className="text-black md:text-[17px] text-[15px] font-[400]">0{propertyData.propertyDetails.BathroomsTotalInteger}</p>
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">0{propertyData.BathroomsTotalInteger}</p>
             </div>         
             
             <div className="md:w-2/5 w-full flex justify-between items-center">
               <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400]">Washrooms :</p>
-              <p className="text-black md:text-[17px] text-[15px] font-[400]">0{propertyData.propertyDetails.BathroomsTotalInteger}</p>
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">0{propertyData.BathroomsTotalInteger}</p>
             </div>     
             
             <div className="md:w-2/5 w-full flex justify-between items-center">
               <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400]">Approx. Age :</p>
-              <p className="text-black md:text-[17px] text-[15px] font-[400]">{`${propertyData?.propertyDetails?.ApproximateAge !== null ? `${propertyData?.propertyDetails?.ApproximateAge}` : "-"}`}</p>
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">{`${propertyData?.ApproximateAge !== null ? `${propertyData?.ApproximateAge}` : "-"}`}</p>
             </div>   
             
             <div className="md:w-2/5 w-full flex justify-between items-center">
               <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400]">Kitchens :</p>
-              <p className="text-black md:text-[17px] text-[15px] font-[400]">{`${propertyData?.propertyDetails?.KitchensTotal !== null ? `0${propertyData?.propertyDetails?.KitchensTotal}` : "-"}`}</p>
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">{`${propertyData?.KitchensTotal !== null ? `0${propertyData?.KitchensTotal}` : "-"}`}</p>
             </div>     
             
             <div className="md:w-2/5 w-full flex justify-between items-center">
               <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400]">Lot Size :</p>
-              <p className="text-black md:text-[17px] text-[15px] font-[400]">{`${propertyData?.propertyDetails?.LotSizeRangeAcres !== null ? `${propertyData?.propertyDetails?.LotSizeRangeAcres}` : "-"}`}</p>
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">{`${propertyData?.LotSizeRangeAcres !== null ? `${propertyData?.LotSizeRangeAcres}` : "-"}`}</p>
             </div>        
             
             <div className="md:w-2/5 w-full flex justify-between items-center">
               <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400]">Property Type :</p>
-              <p className="text-black md:text-[17px] text-[15px] font-[400]">{`${propertyData?.propertyDetails?.PropertyType !== null ? `${propertyData?.propertyDetails?.PropertyType}` : "-"}`}</p>
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">{`${propertyData?.PropertyType !== null ? `${propertyData?.PropertyType}` : "-"}`}</p>
             </div>       
             
             <div className="md:w-2/5 w-full flex justify-between items-center">
               <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400]">Sq Footage :</p>
-              <p className="text-black md:text-[17px] text-[15px] font-[400]">{`${propertyData?.propertyDetails?.LivingAreaRange !== null ? `${propertyData?.propertyDetails?.LivingAreaRange}` : "-"}`}</p>
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">{`${propertyData?.LivingAreaRange !== null ? `${propertyData?.LivingAreaRange}` : "-"}`}</p>
             </div>      
             
             <div className="md:w-2/5 w-full flex justify-between items-center">
               <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400]">Status :</p>
-              <p className="text-black md:text-[17px] text-[15px] font-[400]">{`${propertyData?.propertyDetails?.TransactionType !== null ? `${propertyData?.propertyDetails?.TransactionType}` : ""}`}</p>
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">{`${propertyData?.TransactionType !== null ? `${propertyData?.TransactionType}` : ""}`}</p>
             </div>
           </div>
         </div>
@@ -319,7 +337,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
               Status:
               </p>
               <p className="text-[#000000] md:text-[17px] text-[15px] font-[400] ">
-              {propertyData?.propertyDetails?.Basement?.[0] || "N/A"}
+              {propertyData?.Basement?.[0] || "N/A"}
               </p>
             </div>            
             
@@ -330,7 +348,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
               Entrance:
               </p>
               <p className="text-[#000000] md:text-[17px] text-[15px] font-[400] ">
-              {propertyData?.propertyDetails?.Basement?.[1] || "N/A"}
+              {propertyData?.Basement?.[1] || "N/A"}
               </p>
             </div>
           </div>
@@ -367,7 +385,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
                 Garage Parking
               </p>
               <p className="text-[#000] md:text-[17px] text-[15px] font-[400] ">
-                {`${propertyData?.propertyDetails?.GarageParkingSpaces !== null ? `${propertyData?.propertyDetails?.GarageParkingSpaces}` : "-"}`}
+                {`${propertyData?.GarageParkingSpaces !== null ? `${propertyData?.GarageParkingSpaces}` : "-"}`}
               </p>
             </div>   
             
@@ -378,7 +396,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
                 Drive Parking
               </p>
               <p className="text-[#000] md:text-[17px] text-[15px] font-[400] ">
-                {`${propertyData?.propertyDetails?.ParkingSpaces !== null ? `${propertyData?.propertyDetails?.ParkingSpaces}` : ""}`}
+                {`${propertyData?.ParkingSpaces !== null ? `${propertyData?.ParkingSpaces}` : ""}`}
               </p>
             </div>
           </div>
@@ -415,7 +433,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
               Central A/C:
               </p>
               <p className="text-[#000] md:text-[17px] text-[15px] font-[400] ">
-              {`${propertyData?.propertyDetails?.Cooling !== null ? `${propertyData?.propertyDetails?.Cooling}` : ""}`}
+              {`${propertyData?.Cooling !== null ? `${propertyData?.Cooling}` : ""}`}
               </p>
             </div>           
             
@@ -426,7 +444,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
               Heat Source:
               </p>
               <p className="text-[#000] md:text-[17px] text-[15px] font-[400] ">
-              {`${propertyData?.propertyDetails?.CooliHeatSourceng !== null ? `${propertyData?.propertyDetails?.HeatSource}` : ""}`}
+              {`${propertyData?.CooliHeatSourceng !== null ? `${propertyData?.HeatSource}` : ""}`}
               </p>
             </div>       
             
@@ -437,7 +455,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
               Water:
               </p>
               <p className="text-[#000] md:text-[17px] text-[15px] font-[400] ">
-              {`${propertyData?.propertyDetails?.Water !== null ? `${propertyData?.propertyDetails?.Water}` : ""}`}
+              {`${propertyData?.Water !== null ? `${propertyData?.Water}` : ""}`}
               </p>
             </div>         
             
@@ -448,7 +466,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
               Sewers:
               </p>
               <p className="text-[#000] md:text-[17px] text-[15px] font-[400] ">
-              {`${propertyData?.propertyDetails?.Sewer !== null ? `${propertyData?.propertyDetails?.Sewer}` : ""}`}
+              {`${propertyData?.Sewer !== null ? `${propertyData?.Sewer}` : ""}`}
               </p>
             </div>
           </div>
@@ -478,7 +496,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
           }}
         >
           <div className="flex mt-3 w-full md:gap-3 rounded-4 flex-wrap justify-between items-center bg-white pt-2 pb-1 rounded-2">
-            {propertyData?.propertyDetails?.InteriorFeatures.map((feature: any, index: any) => (
+            {propertyData.InteriorFeatures.map((feature: any, index: any) => (
               <div
                 key={index}
                 className="md:w-1/5 w-[48%] flex justify-start md:mb-0 mb-[2px] gap-1 items-center"

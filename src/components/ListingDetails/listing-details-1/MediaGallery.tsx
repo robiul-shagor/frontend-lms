@@ -54,7 +54,7 @@ const MediaGallery = ({ style, data }: any) => {
     // You can also handle other error recovery logic here
   };
 
-  const thumbnailImages = data.media.filter((carousel: any) => carousel.ImageSizeDescription === 'Thumbnail');
+  const thumbnailImages = data.value.filter((carousel: any) => carousel.ImageSizeDescription === 'Thumbnail');
   const totalThumbnails = thumbnailImages.length;
 
   return (
@@ -77,7 +77,7 @@ const MediaGallery = ({ style, data }: any) => {
                       },
                     }}
                   >
-                    {data.media
+                    {data.value
                       .filter((thumb: any) => thumb.ImageSizeDescription === 'Largest')
                       .map((thumb: any, index: any) => (
                       <a
@@ -91,7 +91,7 @@ const MediaGallery = ({ style, data }: any) => {
                 </div>
 
                 <div className="carousel-inner">
-                  {data.media
+                  {data.value
                     .filter((carousel: any) => carousel.ImageSizeDescription === 'Largest')
                     .map((carousel: any, index: any) => {
                       return(
@@ -140,7 +140,7 @@ const MediaGallery = ({ style, data }: any) => {
               // paddingBottom: "10px", // Space at the bottom of the small carousel
             }}
           >
-            {data.media
+            {data.value
               .filter((carousel : any) => carousel.ImageSizeDescription === 'Thumbnail')
               .slice(0, 4)
               .map((carousel: any , index: any) => (
