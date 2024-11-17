@@ -1,5 +1,5 @@
 "use server";
-import { TOKEN_IDX, WEB_URL } from "../constant/constant";
+import { TOKEN_IDX, TOKEN_VOW, WEB_URL } from "../constant/constant";
 
 // export const fetchMediaData = async () => {
 //   try {
@@ -47,7 +47,7 @@ export const fetchIndividualProperty = async (key) => {
   try {
     const response = await fetch(`https://query.ampre.ca/odata/Property?$filter=ListingKey eq '${key}'`, {
       headers: {
-        Authorization: `Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ2ZW5kb3IvdHJyZWIvNjI4OSIsImF1ZCI6IkFtcFVzZXJzUHJkIiwicm9sZXMiOlsiQW1wVmVuZG9yIl0sImlzcyI6InByb2QuYW1wcmUuY2EiLCJleHAiOjI1MzQwMjMwMDc5OSwiaWF0IjoxNzMxNTg3OTI5LCJzdWJqZWN0VHlwZSI6InZlbmRvciIsInN1YmplY3RLZXkiOiI2Mjg5IiwianRpIjoiOTIzZThlY2RlNTc0YTIzZiIsImN1c3RvbWVyTmFtZSI6InRycmViIn0.wviAjx4NMbmiRWupFM3MNjKryEGqL06uXlGDj5OFmq8`,
+        Authorization: `Bearer ${TOKEN_VOW}`,
       },
     });
     if (!response.ok) {
