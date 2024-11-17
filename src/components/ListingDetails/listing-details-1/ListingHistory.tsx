@@ -81,7 +81,7 @@ const ListingHistory = ({ propertyData }: any) => {
         : "-",
       status: propertyData.MlsStatus || "Unknown",
       soldPrice: propertyData.SoldConditionalEntryTimestamp
-        ? formatPrice(propertyData.OriginalListPrice)
+        ? formatPrice(propertyData.ClosePrice)
         : "-",
       mls: propertyData.ListingKey || "-",
     },

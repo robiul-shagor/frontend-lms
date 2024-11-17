@@ -50,14 +50,25 @@ const CommonBanner = ({ style_3, data }: any) => {
         </div>
 
         <div className=" md:mt-0 ">
+          {
+            data?.ClosePrice !== null && (
+              <div className="text-black md:text-[26px] sm:text-[24px] text-[16px] font-[500] md:flex justify-end items-center">
+                Sold: ${`${data?.ClosePrice !== null ? `${data?.ClosePrice}` : ""}`}
+              </div>
+            )
+          }
           <div className="flex md:flex-row flex-col md:justify-end justify-start md:items-center gap-2">
-            <div className="sm:flex hidden justify-center items-center text-white text-[12px] bg-[#6FE0A2]   rounded-[23px] w-[80.21px] h-[22px]">
-              {`${data?.TransactionType !== null ? `${data?.TransactionType}` : ""}`}
-            </div>
-            <div className="text-black md:text-[26px] sm:text-[24px] text-[16px] font-[500] md:flex justify-end items-center">
+            { data?.ClosePrice == null && (
+              <div className="sm:flex hidden justify-center items-center text-white text-[12px] bg-[#6FE0A2]   rounded-[23px] w-[80.21px] h-[22px]">
+                {`${data?.TransactionType !== null ? `${data?.TransactionType}` : ""}`}
+              </div>
+            ) }
+            <div className={`text-black ${data?.ClosePrice !== null ? '' : 'md:text-[26px] sm:text-[24px]'}  text-[16px] font-[500] md:flex justify-end items-center`}>
               Price: ${`${data?.ListPrice !== null ? `${data?.ListPrice}` : ""}`}
-            </div>
+            </div> 
           </div>
+
+          
           <p className=" text-[#7a7a7a] font-[500] md:text-[16px] sm:text-[14px] text-[12px] flex  justify-end md:text-right text-left">
             Property Taxes: <span className="text-black ">${`${data?.TaxAnnualAmount !== null ? `${data?.TaxAnnualAmount}` : ""}`}/yr</span>
           </p>
