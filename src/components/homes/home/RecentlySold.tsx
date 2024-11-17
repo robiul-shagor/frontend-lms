@@ -217,8 +217,6 @@ export default async function NewListing() {
       media: mediaMap[property.ListingKey] || [],
     }));
 
-    console.log(listingKeys)
-
     posts = enrichedProperties;
   } catch (error) {
     console.error('Failed to fetch sold property data:', error);
