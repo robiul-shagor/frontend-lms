@@ -70,7 +70,7 @@ const CommonBanner = ({ style_3, data }: any) => {
 
           
           <p className=" text-[#7a7a7a] font-[500] md:text-[16px] sm:text-[14px] text-[12px] flex  justify-end md:text-right text-left">
-            Property Taxes: <span className="text-black ">${`${data?.TaxAnnualAmount !== null ? `${data?.TaxAnnualAmount}` : ""}`}/yr</span>
+            Property Taxes: <span className="text-black ">${`${data?.TaxAnnualAmount !== null ? `${data?.TaxAnnualAmount}` : ""}`} {`(${data?.TaxYear})`}</span>
           </p>
         </div>
       </div>
