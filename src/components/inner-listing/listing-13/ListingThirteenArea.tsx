@@ -1,5 +1,5 @@
 "use client";
-import { CSSProperties, useEffect, useRef, useState } from "react";
+import { CSSProperties, useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 // import DropdownSix from "@/components/search-dropdown/inner-dropdown/DropdownSix";
 import UseShortedProperty from "@/hooks/useShortedProperty";
@@ -31,7 +31,7 @@ import { set } from "mongoose";
 import CustomDropdown from "@/components/common/CustomDropDown";
 import PriceDropDown from "@/components/common/PriceDropDown";
 import FilterMoreOptions from "@/components/common/FilterMoreOptions";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 // const select_type: string[] = [
 //   "All",
@@ -207,45 +207,25 @@ const ListingThirteenArea = () => {
     },
     {
       label: "Detached",
-      value: "detached",
-    },
-    {
-      label: "Semi Detached",
-      value: "semi-detached",
-    },
-    {
-      label: "Townhouse",
-      value: "townhouse",
-    },
-    {
-      label: "Condo",
-      value: "condo",
+      value: "Detached",
     },
     {
       label: "Commercial",
-      value: "commercial",
+      value: "Commercial Retail",
+    },
+    {
+      label: "Vacant Land",
+      value: "Vacant Land",
+    },
+    {
+      label: "Farm",
+      value: "Farm",
+    },
+    {
+      label: "Office",
+      value: "Office",
     },
   ];
-  // const {
-  //   itemOffset,
-  //   sortedProperties,
-  //   currentItems,
-  //   // pageCount,
-  //   // handlePageClick,
-  //   handleBathroomChange,
-  //   handleBedroomChange,
-  //   handleSearchChange,
-  //   handlePriceChange,
-  //   maxPrice,
-  //   priceValue,
-  //   resetFilters,
-  //   selectedAmenities,
-  //   handleAmenityChange,
-  //   handleLocationChange,
-  //   handleStatusChange,
-  //   handleTypeChange,
-  //   handlePriceDropChange,
-  // } = UseShortedProperty({ itemsPerPage, page });
 
   const [pageCount, setPageCount] = useState(0);
   const [show, setShow] = useState(false);
@@ -263,7 +243,12 @@ const ListingThirteenArea = () => {
   }>({});
 
   const router = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const key: any = router.get("search");
+  const propertyType: any = router.get("propertyType");
+  const routerMain = useRouter();
+  const pathname = usePathname();
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPages, setItemsPerPages] = useState(20); // Defaults to 10
@@ -315,13 +300,14 @@ const ListingThirteenArea = () => {
     status: "",
   });
 
-  const [activeTab, setActiveTab] = useState("detached");
+  const [activeTab, setActiveTab] = useState("all");
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
   const handleActiveTab = (value: string) => {
     setActiveTab(value);
+    routerMain.push( pathname + '?' + createQueryString('propertyType', value))
   };
 
   const handleSelectChange = (value: string, index: number) => {
@@ -343,6 +329,16 @@ const ListingThirteenArea = () => {
     //resetFilters();
   };
 
+  const createQueryString = useCallback(
+    (name: string, value: string) => {
+      const params = new URLSearchParams()
+      params.set(name, value)
+ 
+      return params.toString()
+    },
+    [routerMain]
+  )
+
   const override: CSSProperties = {
     display: "block",
     margin: "0 auto",
@@ -359,6 +355,8 @@ const ListingThirteenArea = () => {
             let response:any;
             if( key ) {
               response = await fetchLisingPropertyData({ searchQuery: key });
+            } else if( propertyType && propertyType !== 'all') {
+              response = await fetchLisingPropertyData({ propertyType: propertyType });
             } else {
               response = await fetchLisingPropertyData();
             }
@@ -397,7 +395,7 @@ const ListingThirteenArea = () => {
     };
 
     fetchData();
-  }, [currentPage, itemsPerPages]);
+  }, [currentPage, itemsPerPages, key, propertyType ]);
 
 
 
@@ -725,7 +723,7 @@ const ListingThirteenArea = () => {
           </ul>
         </div>
       </div> */}
-      <div className="w-full md:flex hidden justify-center items-center flex-wrap   gap-8 md:pt-[30px] py-[2px]">
+      <div className="w-full md:flex hidden justify-center items-center flex-wrap   gap-8 md:pt-[30px] py-[2px] z-10 relative">
         {mapTabs.map((tab, index) => (
           <div
             key={index}
@@ -735,12 +733,12 @@ const ListingThirteenArea = () => {
                 : "border-1 border-[#b3b3b3] text-black font-normal"
             } `}
           >
-            <p onClick={() => handleActiveTab(tab.value)}>{tab.label}</p>
+            <button onClick={() => handleActiveTab(tab.value)}>{tab.label}</button>
           </div>
         ))}
       </div>
 
-      <div className="wrapper -mt-11">
+      <div className="wrapper -mb-11">
         <div className="row gx-0">
           <div className="w-full">
             <div className="ps-3 pe-3 ps-md-4 pe-md-4 ps-xxl-5 pe-xxl-5 pt-50 pb-200 xl-pb-120 md-pb-80">
@@ -819,7 +817,7 @@ const ListingThirteenArea = () => {
                               <div className="d-flex flex-wrap align-items-center mt-1 justify-content-between ">
                                 <p className="text-[14px] text-[#999999]">
                                   {`${item?.UnparsedAddress !== null ? `${item?.UnparsedAddress}` : ""}`} 
-                                  {`- ${item?.City !== null ? `${item?.City}` : ""}`}
+                                  {/* {`- ${item?.City !== null ? `${item?.City}` : ""}`} */}
                                 </p>
                               </div>
 

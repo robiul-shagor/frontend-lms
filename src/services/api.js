@@ -51,7 +51,7 @@ export const fetchLisingPropertyData = async ({
     }
 
     if (propertyType) {
-      filterConditions.push(`PropertyType eq '${propertyType}'`);
+      filterConditions.push(`PropertySubType eq '${propertyType}'`);
     }
     if (isSold) {
       filterConditions.push(`MlsStatus eq 'Sold'`);
@@ -59,6 +59,8 @@ export const fetchLisingPropertyData = async ({
 
     // Join all filter conditions with 'and'
     const filterQuery = filterConditions.join(' and ');
+
+    console.log(filterQuery);
 
     const response = await fetch(`${WEB_URL}/odata/Property?$skip=${skipValue}&$top=${pageSize}&$count=true&$filter=${encodeURIComponent(filterQuery)}`, {
       headers: {
