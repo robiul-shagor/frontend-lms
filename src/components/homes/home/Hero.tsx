@@ -18,16 +18,17 @@ export default function Hero() {
           Recently Sold
         </div>
       </div>
-      <div className=" mt-7 px-3 md:w-[651px] w-[320px] md:h-[70px] h-[68px] flex justify-between items-center rounded-[50px] bg-white shadow-lg">
+      <form action="/listing_13" method="GET" className="mt-7 px-3 md:w-[651px] w-[320px] md:h-[70px] h-[68px] flex justify-between items-center rounded-[50px] bg-white shadow-lg">   
         <input
           type="text"
+          name="search"
           placeholder="Search for an Address, MLS Number or neighoourhood"
-          className="md:w-[463.77px] w-auto border-none outline-none text-[#adadad] placeholder-[#adadad] rounded-[50px] text-[18px] font-urbanist font-[400] "
+          className="md:w-[463.77px] w-auto border-none outline-none text-[#adadad] placeholder-[#adadad] rounded-[50px] text-[18px] font-urbanist font-[400]"
         />
-        <div className="bg-[#110B23] md:w-[70px] w-[41] md:h-[47px] h-[41] rounded-[50px] flex justify-center items-center">
-          <HiArrowLongRight className="text-white font-bold text-[27px]" />
-        </div>
-      </div>
+        <button type="submit" className="bg-[#110B23] md:w-[70px] w-[41] md:h-[47px] h-[41] rounded-[50px] flex justify-center items-center">
+              <HiArrowLongRight className="text-white font-bold text-[27px]" />
+        </button>
+      </form>
       <div className="flex justify-center mb-11 px-2 items-center rounded-[50px] md:w-[508px] w-[321px] h-[55px] bg-gradient2 rounded-50px font-urbanist font-bold mt-10">
         <div className="text-white md:w-[264px] w-[167px] bg-gradient4  font-bold text-[18px] h-[42px] rounded-[50px] flex justify-center items-center">
           Home Evalutaion

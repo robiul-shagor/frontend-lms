@@ -8,6 +8,7 @@ import { MdOutlineKingBed } from "react-icons/md";
 import { PiBathtub } from "react-icons/pi";
 import { BsTextarea } from "react-icons/bs";
 import Image from "next/image";
+import { fetchPropertyData, fetchMediaPropertyData } from "@/services/api";
 
 // Define the Media type
 interface Media {
@@ -116,16 +117,16 @@ const Card = ({ item }: { item: any }) => {
     const activeImage = media.find(
       (m) => m.MediaStatus === 'Active' && m.MediaType.startsWith('image')
     );
-    return activeImage ? activeImage.MediaURL : '/fallback-image-url.jpg'; // Provide a fallback URL or handle cases where no image is found
+    return activeImage ? activeImage.MediaURL : ''; // Provide a fallback URL or handle cases where no image is found
   };
 
   const imageUrl = findActiveImageUrl(item.media);
-  const itemData = item.propertyDetails;
 
-  // Only render the card if MlsStatus is 'New'
-  if (itemData.MlsStatus !== 'New' || !itemData.PropertyType.includes('Residential')) {
-    return null;  // Or return a placeholder component/message if needed
+  if (!imageUrl) {
+    return null;
   }
+  
+  const itemData = item;
 
   const bedrooms = itemData.BedroomsTotal ? `${itemData.BedroomsTotal} Bed` : "0Bed";
   const bathrooms = itemData.BathroomsTotalInteger ? `${itemData.BathroomsTotalInteger} Bath` : "0Bath";
@@ -204,8 +205,30 @@ const Card = ({ item }: { item: any }) => {
 };
 
 export default async function NewListing() {
-  let data = await fetch('https://api-lms-alpha.vercel.app/api/properties/?page=1&PropertyType=Residential&MlsStatus=New&limit=8')
-  let posts = await data.json();
+  let posts;
+  try {
+    // Await the promise returned by fetchSoldPropertyData
+    const response = await fetchPropertyData(); // Ensure this function returns a valid fetch response
+    posts = await response; // Parse the JSON data
+
+    const listingKeys = posts.value.map((property: any) => property.ListingKey);
+    const mediaMap = await fetchMediaPropertyData(listingKeys);
+    
+
+    // Enrich properties with media
+    const enrichedProperties = posts.value.map((property: any) => ({
+      ...property,
+      media: mediaMap[property.ListingKey] || [],
+    }));
+
+    posts = enrichedProperties;
+  } catch (error) {
+    console.error('Failed to fetch sold property data:', error);
+    posts = { properties: [] }; // Provide a fallback if the fetch fails
+  }
+  // let posts = await data.json();
+
+  //console.log(data);
 
   return (
     <div className="w-full mt-7 font-urbanist">
@@ -221,7 +244,7 @@ export default async function NewListing() {
         </div>
       </div>
       <div className="my-6 flex justify-start items-center md:gap-5 gap-3 ml-[6vw] pr-4 overflow-x-auto scrollable py-1">
-        {posts.properties.map((item: any, index: any) => (
+        {posts.map((item: any, index: any) => (
           <Card key={index} item={item as any} />
         ))}
       </div>

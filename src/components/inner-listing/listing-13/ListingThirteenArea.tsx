@@ -7,7 +7,7 @@ import NiceSelect from "@/ui/NiceSelect";
 import Image from "next/image";
 // import ReactPaginate from "react-paginate";
 import ClipLoader from "react-spinners/ClipLoader";
-// import { fetchMediaData, fetchPropertyData } from "@/services/api";
+import { fetchMediaPropertyData, fetchLisingPropertyData } from "@/services/api";
 import { LiaBedSolid } from "react-icons/lia";
 import { PiBathtub } from "react-icons/pi";
 import { PiGarage } from "react-icons/pi";
@@ -31,6 +31,7 @@ import { set } from "mongoose";
 import CustomDropdown from "@/components/common/CustomDropDown";
 import PriceDropDown from "@/components/common/PriceDropDown";
 import FilterMoreOptions from "@/components/common/FilterMoreOptions";
+import { useSearchParams } from "next/navigation";
 
 // const select_type: string[] = [
 //   "All",
@@ -182,6 +183,7 @@ interface ErrorState {
 }
 interface ApiResponse {
   success: boolean;
+  value: Property[];
   properties: Property[];
   totalProperties: number  // Define 'properties' based on its structure in the API
 }
@@ -260,8 +262,11 @@ const ListingThirteenArea = () => {
     [key: number]: string;
   }>({});
 
+  const router = useSearchParams();
+  const key: any = router.get("search");
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPages, setItemsPerPages] = useState(10); // Defaults to 10
+  const [itemsPerPages, setItemsPerPages] = useState(20); // Defaults to 10
   const [totalProperties, setTotalProperties] = useState(0);
 
   const [styleView, setStyleView] = useState("grid");
@@ -347,22 +352,41 @@ const ListingThirteenArea = () => {
   useEffect(() => {
     const fetchData = async () => {
         setIsLoading(true);
+
+        let posts:any  = [];
         
         try {
-            const response = await fetch('https://api-lms-alpha.vercel.app/api/properties/?page=${currentPage}&limit=${itemsPerPages}&PropertyType=Residential');
-            
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const result: ApiResponse = await response.json();
-            if (result?.properties) {
-              setpropertiesData(result.properties);
-            
-              setTotalProperties(result.totalProperties); 
+            let response:any;
+            if( key ) {
+              response = await fetchLisingPropertyData({ searchQuery: key });
             } else {
-              setError('API responded with an error');
+              response = await fetchLisingPropertyData();
             }
+            const listingKeys = response.value.map((property: any) => property.ListingKey);
+            const mediaMap = await fetchMediaPropertyData(listingKeys);
+
+            const enrichedProperties = response.value.map((property: any) => ({
+              ...property,
+              media: mediaMap[property.ListingKey] || [],
+            }));
+        
+            posts = enrichedProperties;
+          
+            setpropertiesData(posts);
+
+            if (response['@odata.count']) {
+              setTotalProperties(response['@odata.count']); 
+            }
+
+            // if (result?.properties) {
+            //   setpropertiesData(result.properties);
+            
+            //   setTotalProperties(result.totalProperties); 
+            // } else {
+            //   setError('API responded with an error');
+            // }
         } catch (err) {
+          console.log(err)
             if (err instanceof Error) {
                 setError(err.message);
             } else {
@@ -473,6 +497,8 @@ const ListingThirteenArea = () => {
     );
     return activeImage ? activeImage.MediaURL : ''; // Provide a fallback URL or handle cases where no image is found
   };
+
+  
 
   return (
     <div className="w-[100vw] mt-[115px] ">
@@ -755,13 +781,13 @@ const ListingThirteenArea = () => {
                                         : "bg-[#6CCFAC]"
                                     } `}
                                   >
-                                    {item.propertyDetails.TransactionType}
+                                    {item.TransactionType}
                                   </div>
                                   <Link
                                     href="#"
                                     className="bg-white text-black rounded-l-[8px] px-2 py-[2px] text-[12px]"
                                   >
-                                    {item.propertyDetails.PropertySubType}
+                                    {item.PropertySubType}
                                   </Link>
                                 </div>
 
@@ -771,6 +797,7 @@ const ListingThirteenArea = () => {
                                     src={findActiveImageUrl(item.media)}
                                     width={400}
                                     height={300}
+                                    className="h-[300px] object-cover"
                                   />
                                 </div>
                               </div>
@@ -782,15 +809,17 @@ const ListingThirteenArea = () => {
                                   className="text-[20px] text-black  font-urbanist font-[500]"
                                   style={{ maxWidth: "90%" }}
                                 >
-                                  {item.propertyDetails.CrossStreet}
+                                  {`${item?.UnitNumber !== null ? `${item?.UnitNumber} -` : ""} ${ item?.StreetNumber} ${item?.StreetName} ${item?.StreetSuffix}`}
+                                  
                                 </Link>
                                 <p className="text-[12px] text-[#999999]">
-                                  {timeAgo(item.propertyDetails.ModificationTimestamp)}
+                                  {timeAgo(item.ModificationTimestamp)}
                                 </p>
                               </div>
                               <div className="d-flex flex-wrap align-items-center mt-1 justify-content-between ">
                                 <p className="text-[14px] text-[#999999]">
-                                  {item.propertyDetails.UnparsedAddress}
+                                  {`${item?.UnparsedAddress !== null ? `${item?.UnparsedAddress}` : ""}`} 
+                                  {`- ${item?.City !== null ? `${item?.City}` : ""}`}
                                 </p>
                               </div>
 
@@ -798,7 +827,7 @@ const ListingThirteenArea = () => {
                                 <li className="flex justify-start items-start gap-1">
                                   <LiaBedSolid className="text-black text-xl mt-1" />
                                   <p className="text-black text-[16px] font-[400]">
-                                    0{item.propertyDetails.BedroomsTotal ? `${item.propertyDetails.BedroomsTotal}` : ""}
+                                    0{item.BedroomsTotal ? `${item.BedroomsTotal}` : ""}
                                   </p>
                                   <p className="text-[#999999] text-[16px] font-[400] font-urbanist">
                                     bed
@@ -807,7 +836,7 @@ const ListingThirteenArea = () => {
                                 <li className="flex justify-start items-start gap-1">
                                   <PiBathtub className="text-black text-xl mt-1" />
                                   <p className="text-black text-[16px]  font-[400]">
-                                    0{item.propertyDetails.BathroomsTotalInteger ? `${item.propertyDetails.BathroomsTotalInteger}` : ""}
+                                    0{item.BathroomsTotalInteger ? `${item.BathroomsTotalInteger}` : ""}
                                   </p>
                                   <p className="text-[#999999]  text-[16px] font-[400] font-urbanist">
                                     bath
@@ -816,7 +845,7 @@ const ListingThirteenArea = () => {
                                 <li className="flex justify-start items-start gap-1">
                                   <PiGarage className="text-black text-xl mt-1" />
                                   <p className="text-black text-[16px]  font-[400]">
-                                    0{item.propertyDetails.ParkingSpaces ? `${item.propertyDetails.ParkingSpaces}` : ""}
+                                    0{item.ParkingSpaces ? `${item.ParkingSpaces}` : ""}
                                   </p>
                                   <p className="text-[#999999] text-[16px] font-[400] font-urbanist">
                                     Parking
@@ -826,18 +855,20 @@ const ListingThirteenArea = () => {
 
                               <div className="pl-footer py-1 border-t  border-[#a8a8a8] border-dashed d-flex align-items-center justify-content-between">
                                 <div className=" text-[24px] font-[500]  text-[#000] ">
-                                  {index === 0 ? (
-                                    <span className="flex items-center gap-2">
-                                      <span className="line-through font-normal text-[#999] text-[24px]">
-                                        $1,720,000
+                                  {
+                                    item.PriceChangeTimestamp ? (
+                                      <span className="flex items-center gap-2">
+                                        <span className="line-through font-normal text-[#999] text-[24px]">
+                                          ${item.OriginalListPrice}
+                                        </span>
+                                        <span className="text-[#FF4A4A] font-semibold">
+                                          ${item.ListPrice}
+                                        </span>
                                       </span>
-                                      <span className="text-[#FF4A4A] font-semibold">
-                                        $1,720,000
-                                      </span>
-                                    </span>
-                                  ) : (
-                                    "$" + item.propertyDetails.ListPrice
-                                  )}
+                                    ) : (
+                                      "$" + item.ListPrice
+                                    )
+                                  }
                                 </div>
                                 <Link
                                   href={`/listing_details_01?id=${item.ListingKey}`}
@@ -869,13 +900,13 @@ const ListingThirteenArea = () => {
                           className="w-full h-full bg-contain"
                         />
                         <div className="absolute left-0  top-3 px-2 flex justify-center font-[500] text-[12px] text-white  bg-[#6CCFAC] w-[68.94px] h-[21.0px] items-center rounded-tr-[10px] rounded-br-[10px]">
-                          {item.propertyDetails.TransactionType}
+                          {item.TransactionType}
                         </div>
                       </div>
                       <div className=" px-3 py-3 w-full">
                         <div className="md:w-[95%] w-full mx-auto flex justify-between items-center">
                           <h2 className="text-[26px] text-black  font-[500]">
-                            {item.propertyDetails.CrossStreet}
+                            {item.CrossStreet}
                           </h2>
                           <div className="flex justify-end items-center gap-3">
                             <Link href="#">
@@ -892,17 +923,17 @@ const ListingThirteenArea = () => {
                         {/* <div className="flex justify-end w-full"> */}
                           <div className="flex justify-between items-center w-full md:w-[95%] mx-auto">
                             <div className="  text-[18px] font-[400]  text-[#545454] mt-2">
-                              {item.propertyDetails.UnparsedAddress}
+                              {item.UnparsedAddress}
                             </div>
                             <div className="  text-[18px] font-[400]  text-[#545454] mt-2">
-                              {item.propertyDetails.City}
+                              {item.City}
                             </div>
                           {/* </div> */}
                         </div>
                         <div className="md:w-[95%] w-full mx-auto flex flex-wrap justify-between items-center  md:mt-[40px] mt-[20px]">
                           <div className="md:w-auto w-[32%]">
                             <p className="text-[20px] text-black font-[400]">
-                              {item.propertyDetails.PropertySubType}
+                              {item.PropertySubType}
                             </p>
                             <p className="text-[#626262] text-[16px] ">Type</p>
                           </div>
@@ -917,7 +948,7 @@ const ListingThirteenArea = () => {
                           </div>
                           <div className="md:w-auto w-[32%]">
                             <p className="text-[20px] text-black font-[400]">
-                              0{item.propertyDetails.BedroomsTotal ? `${item.propertyDetails.BedroomsTotal}` : ""}
+                              0{item.BedroomsTotal ? `${item.BedroomsTotal}` : ""}
                             </p>
                             <p className="text-[#626262] text-[16px] ">bed</p>
                           </div>
@@ -932,7 +963,7 @@ const ListingThirteenArea = () => {
                           </div>
                           <div className="md:w-auto w-[32%]">
                             <p className="text-[20px] text-black font-[400]">
-                              0{item.propertyDetails.BathroomsTotalInteger ? `${item.propertyDetails.BathroomsTotalInteger}` : ""}
+                              0{item.BathroomsTotalInteger ? `${item.BathroomsTotalInteger}` : ""}
                             </p>
                             <p className="text-[#626262] text-[16px] ">bath</p>
                           </div>
@@ -947,7 +978,7 @@ const ListingThirteenArea = () => {
                           </div>
                           <div className="md:w-auto w-[32%]">
                             <p className="text-[20px] text-black font-[400]">
-                              0{item.propertyDetails.KitchensTotal ? `${item.propertyDetails.KitchensTotal}` : ""}
+                              0{item.KitchensTotal ? `${item.KitchensTotal}` : ""}
                             </p>
                             <p className="text-[#626262] text-[16px] ">
                               Kitchen
@@ -988,7 +1019,7 @@ const ListingThirteenArea = () => {
                         </div>
                         <div className="md:w-[95%] w-full mx-auto flex justify-between items-center mt-[40px]">
                           <p className=" text-[26px] text-black font-[500]">
-                            {"$" + item.propertyDetails.ListPrice}
+                            {"$" + item.ListPrice}
                           </p>
                           <Link href={`/listing_details_01?id=${item.ListingKey}`}>
                             <div className="flex bg-[#6965FD] justify-center items-center w-[47.37px] h-[47.37px]">
@@ -1041,7 +1072,7 @@ const ListingThirteenArea = () => {
 
       <div className="flex justify-center items-center gap-4 mb-[80px] -mt-[130px]">
         <div className="flex gap-2 justify-between items-center text-black">
-          {Array.from({ length: totalPages }, (_, index) => (
+          {/* {Array.from({ length: totalPages }, (_, index) => (
             <div
               key={index + 1}
               className={`hover:text-white hover:bg-[#aeacff] hover:p-2 w-[30px] h-[30px] flex justify-center items-center cursor-pointer text-[17px] ${
@@ -1051,7 +1082,7 @@ const ListingThirteenArea = () => {
             >
               {index + 1}
             </div>
-          ))}
+          ))} */}
         </div>
         <div
           className="flex justify-start gap-2 items-center text-[17px] text-black cursor-pointer"

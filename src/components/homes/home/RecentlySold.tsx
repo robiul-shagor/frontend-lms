@@ -128,6 +128,9 @@ const Card = ({ item }: { item: any }) => {
   const bathrooms = itemData.BathroomsTotalInteger ? `${itemData.BathroomsTotalInteger} Bath` : "0Bath";
 
   const area = itemData.LivingAreaRange || itemData.BuildingAreaTotal || "Area Info N/A";
+  if (!imageUrl) {
+    return null;
+  }
 
   return (
     <div className="md:min-w-[369.93px] font-urbanist w-[330px] h-[424.52px] rounded-[20px] shadow-md relative group">
