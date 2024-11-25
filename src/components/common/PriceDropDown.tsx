@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 interface DropdownProps {
     minOptions: string[];
     maxOptions: string[];
-    onSelect?: (type: 'min' | 'max', value: string) => void;
+    onSelect?: (min: string | null, max: string | null) => void;
 }
 
 const PriceDropDown: React.FC<DropdownProps> = ({ minOptions, maxOptions, onSelect }) => {
@@ -33,9 +33,13 @@ const PriceDropDown: React.FC<DropdownProps> = ({ minOptions, maxOptions, onSele
         } else {
             setSelectedMax(value);
         }
-        setIsOpen(false);
+
+        if (selectedMin && selectedMax) {
+            setIsOpen(false);
+        }
+        
         if (onSelect) {
-            onSelect(type, value);
+            onSelect(selectedMin, selectedMax);
         }
     };
 
@@ -61,8 +65,7 @@ const PriceDropDown: React.FC<DropdownProps> = ({ minOptions, maxOptions, onSele
                             {minOptions.map((option, index) => (
                                 <div
                                     key={index}
-                                    onClick={()=> setSelectedMin(option)}
-                                    // onClick={() => handleOptionClick('min', option)}
+                                    onClick={() => handleOptionClick('min', option)}
                                     className={`px-4 text-[14px] py-3 cursor-pointer hover:bg-[#7A5CFA] border border-l-0 hover:text-white  ${selectedMin === option ? 'bg-[#7A5CFA] text-white' : ''}`}
                                 >
                                     {option}
@@ -76,8 +79,7 @@ const PriceDropDown: React.FC<DropdownProps> = ({ minOptions, maxOptions, onSele
                             {maxOptions.map((option, index) => (
                                 <div
                                     key={index}
-                                    // onClick={() => handleOptionClick('max', option)} 
-                                    onClick={()=> setSelectedMax(option)}
+                                    onClick={() => handleOptionClick('max', option)} 
                                     className={`px-4 text-[14px] py-3 cursor-pointer hover:bg-[#7A5CFA] border border-r-0 hover:text-white ${selectedMax === option ? 'bg-[#7A5CFA] text-white' : ''}`}
                                 >
                                     {option}

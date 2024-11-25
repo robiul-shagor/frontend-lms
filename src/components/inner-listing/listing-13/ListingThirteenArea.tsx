@@ -7,7 +7,7 @@ import NiceSelect from "@/ui/NiceSelect";
 import Image from "next/image";
 // import ReactPaginate from "react-paginate";
 import ClipLoader from "react-spinners/ClipLoader";
-import { fetchMediaPropertyData, fetchLisingPropertyData } from "@/services/api";
+import { fetchMediaPropertyData, fetchLisingPropertyData, fetchPropertyTypes, fetchPropertySubTypes } from "@/services/api";
 import { LiaBedSolid } from "react-icons/lia";
 import { PiBathtub } from "react-icons/pi";
 import { PiGarage } from "react-icons/pi";
@@ -26,23 +26,61 @@ import { BiSortAlt2 } from "react-icons/bi";
 import { IoGridOutline } from "react-icons/io5";
 import { GoArrowUpRight } from "react-icons/go";
 import SearchFilters from "../listing-14/SearchFilters";
-import { HiOutlineArrowLongRight } from "react-icons/hi2";
+import { HiOutlineArrowLongRight, HiOutlineArrowLongLeft } from "react-icons/hi2";
 import { set } from "mongoose";
 import CustomDropdown from "@/components/common/CustomDropDown";
 import PriceDropDown from "@/components/common/PriceDropDown";
 import FilterMoreOptions from "@/components/common/FilterMoreOptions";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
-// const select_type: string[] = [
-//   "All",
-//   "Houses",
-//   "Condos",
-//   "Townhomes",
-//   "Apartments",
-//   "Land & Lots",
-//   "Commercial Properties",
-// ];
+//Interface
+interface ErrorState {
+  message: string;
+}
+interface ApiResponse {
+  success: boolean;
+  value: Property[];
+  properties: Property[];
+  totalProperties: number  // Define 'properties' based on its structure in the API
+}
 
+interface Property {
+  id: number;
+  name: string;
+}
+
+interface TypeFilterItem {
+  LegacyODataValue: string;
+  LookupKey: string;
+  LookupName: string;
+  LookupStatus: string;
+  LookupValue: string;
+  ModificationTimestamp: string;
+  Order: number;
+  ReplacedByLookupKey: string | null;
+  StatusDate: string;
+}
+
+
+interface Media {
+  ClassName: string;
+  MediaCategory: string;
+  MediaKey: string;
+  MediaModificationTimestamp: string;
+  MediaObjectID: string;
+  MediaStatus: string;
+  MediaType: string;
+  MediaURL: string;
+}
+type HandlePageChangePage = (page: number) => void;
+
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  handlePageChangePage: HandlePageChangePage;
+}
+
+//Const
 const searchOptions = [
   {
     label: "City",
@@ -172,26 +210,9 @@ const sortOptions = [
   { value: "newest", text: "Low to high" },
   { value: "best_seller", text: "Newest" },
   { value: "best_match", text: "Oldest" },
-  // { value: "price_low", text: "Price Low" },
-  // { value: "price_high", text: "Price High" },
 ];
 
 const advancedFilters = [...advancedOptions, ...searchOptions];
-
-interface ErrorState {
-  message: string;
-}
-interface ApiResponse {
-  success: boolean;
-  value: Property[];
-  properties: Property[];
-  totalProperties: number  // Define 'properties' based on its structure in the API
-}
-
-interface Property {
-  id: number;
-  name: string;
-}
 
 const ListingThirteenArea = () => {
   const page = "listing_5";
@@ -232,8 +253,11 @@ const ListingThirteenArea = () => {
   const [skipValue, setSkipValue] = useState(0);
   const [selectedType, setSelectedType] = useState("All");
   const [propertiesData, setpropertiesData] = useState<Property[]>([]);
+  const [propertySubTypes, setPropertySubTypes] = useState<any[]>([]); 
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorText, setErrorText] = useState<string | null>(null);
   const [totalResults, setTotalResults] = useState(0);
   const [toggle, setToggle] = useState(false);
   const [selectedSort, setSelectedSort] = useState("newest");
@@ -241,6 +265,8 @@ const ListingThirteenArea = () => {
   const [selectedOptions, setSelectedOptions] = useState<{
     [key: number]: string;
   }>({});
+
+  const [typeFilter, setTypeFilter] = useState<TypeFilterItem[]>([]);;
 
   const router = useSearchParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -253,17 +279,98 @@ const ListingThirteenArea = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPages, setItemsPerPages] = useState(20); // Defaults to 10
   const [totalProperties, setTotalProperties] = useState(0);
+  const [forSale, setForSale] = useState(false);
+  const [distanceTime, setDistanceTime] = useState<number | null | undefined>(
+    undefined
+  );
 
   const [styleView, setStyleView] = useState("grid");
   const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(
     null
   );
 
+  const [selectedForSaleValue, setselectedForSaleValue] = useState<string>('');
+  const [forSold, setForSold] = useState(false);
+  const [selectedSoldValue, setselectedSoldValue] = useState<string>('');
+  const [selectedPropertySubType, setselectedPropertySubType] = useState<string>('');
+  const [distanceSoldTime, setDistanceSoldTime] = useState<number | null | undefined>(
+    undefined
+  );
+
+  const [minPrice, setMinPrice] = useState<number | null>(null);
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);  
+
+  const [bedRooms, setBedRooms] = useState<string>('');  
+  const [bathRooms, setBathRooms] = useState<string>('');  
+
   const handleTypeClick = (type: string) => {
     setSelectedType(type);
   };
 
+  const [propertyTypePages, setPropertyTypePages] = useState<Record<string, number>>({});
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchLookupData = async () => {
+      try {
+        const propertyTypes = await fetchPropertyTypes();
+
+        const allOption = {
+          LegacyODataValue: "All",
+          LookupKey: "all",
+          LookupName: "PropertyType",
+          LookupStatus: "Active", 
+          LookupValue: "All",
+          ModificationTimestamp: new Date().toISOString(),
+          Order: 0, 
+          ReplacedByLookupKey: null,
+          StatusDate: new Date().toISOString(),
+        };
+  
+        // Prepend "All" option to the propertyTypes
+        const combinedData = [allOption, ...propertyTypes.value];
+
+        // Remove duplicates based on LookupValue
+        const uniqueData = combinedData.filter(
+          (value, index, self) =>
+            index === self.findIndex((t) => t.LookupValue === value.LookupValue)
+        );
+
+        // Set the state with unique values
+        setTypeFilter(uniqueData);
+      } catch (error) {
+        console.error("Error fetching lookup data:", error);
+      }
+    };
+  
+    fetchLookupData();
+  }, []);
+
+  useEffect(() => {
+    const fetchSubPropertFilterData = async () => {
+      try {
+        const response = await fetchPropertySubTypes();
+        // Transform the fetched data into the required structure
+        const transformedData = response.value
+                                .map((item: any) => item.LookupValue) // Extract the LookupValue
+                                .filter((value: any, index: number, self: any[]) => self.indexOf(value) === index); // Remove duplicates
+        
+        // Wrap the data into the options format
+        const typeOptions = [
+          {
+            options: transformedData,
+          },
+        ];
+        
+        setPropertySubTypes(typeOptions); 
+      } catch (error) {
+        console.error('Error fetching Property SubTypes:', error);
+      }
+      setLoading(false);
+    };
+
+    fetchSubPropertFilterData();
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -300,15 +407,22 @@ const ListingThirteenArea = () => {
     status: "",
   });
 
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("All");
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
   const handleActiveTab = (value: string) => {
     setActiveTab(value);
+    setLoading(true);
     routerMain.push( pathname + '?' + createQueryString('propertyType', value))
   };
+
+  useEffect(() => {
+    if (propertyType) {
+        setActiveTab(propertyType);
+    }
+  }, [propertyType]); 
 
   const handleSelectChange = (value: string, index: number) => {
     setSelectedOptions((prev) => ({
@@ -346,67 +460,203 @@ const ListingThirteenArea = () => {
   };
 
   useEffect(() => {
+    // Reset current page to 1 when the property type changes
+    if (!propertyTypePages[propertyType]) {
+      setCurrentPage(1); // Start from page 1 if no page history exists for this propertyType
+    } else {
+      setCurrentPage(propertyTypePages[propertyType]); // Restore the last page visited for this propertyType
+    }
+  
     const fetchData = async () => {
-        setIsLoading(true);
-
-        let posts:any  = [];
-        
-        try {
-            let response:any;
-            if( key ) {
-              response = await fetchLisingPropertyData({ searchQuery: key });
-            } else if( propertyType && propertyType !== 'all') {
-              response = await fetchLisingPropertyData({ propertyType: propertyType });
-            } else {
-              response = await fetchLisingPropertyData();
-            }
-            const listingKeys = response.value.map((property: any) => property.ListingKey);
-            const mediaMap = await fetchMediaPropertyData(listingKeys);
-
-            const enrichedProperties = response.value.map((property: any) => ({
-              ...property,
-              media: mediaMap[property.ListingKey] || [],
-            }));
-        
-            posts = enrichedProperties;
-          
-            setpropertiesData(posts);
-
-            if (response['@odata.count']) {
-              setTotalProperties(response['@odata.count']); 
-            }
-
-            // if (result?.properties) {
-            //   setpropertiesData(result.properties);
-            
-            //   setTotalProperties(result.totalProperties); 
-            // } else {
-            //   setError('API responded with an error');
-            // }
-        } catch (err) {
-          console.log(err)
-            if (err instanceof Error) {
-                setError(err.message);
-            } else {
-                setError('An unknown error occurred');
-            }
+      setIsLoading(true);
+  
+      let posts: any = [];
+      try {
+        // Build filters dynamically based on available state
+        const filters: any = {};
+  
+        if (key) {
+          filters.searchQuery = key;
         }
-        setIsLoading(false);
+  
+        if (propertyType && propertyType !== 'All') {
+          filters.propertyType = propertyType;
+        }
+  
+        if (selectedPropertySubType) {
+          filters.propertySubType = selectedPropertySubType;
+        }
+  
+        if (forSale && distanceTime) {
+          filters.daysSinceChange = distanceTime;
+          filters.forSale = forSale;
+        }
+  
+        if (forSold && distanceSoldTime) {
+          filters.daysSoldSinceChange = distanceSoldTime;
+          filters.isSold = forSold;
+        }
+  
+        // Sanitize minPrice and maxPrice
+        if (minPrice !== null && !isNaN(minPrice)) {
+          filters.minPrice = minPrice;
+        }
+        if (maxPrice !== null && !isNaN(maxPrice)) {
+          filters.maxPrice = maxPrice;
+        }
+
+        if( bedRooms ) {
+          filters.bedRooms = bedRooms;
+        }    
+        
+        if( bathRooms ) {
+          filters.bathRooms = bathRooms;
+        }
+  
+        // Add pagination parameters
+        filters.page = currentPage;
+        filters.pageSize = itemsPerPages;
+  
+        let response: any;
+        response = await fetchLisingPropertyData(filters);
+  
+        if (!response || response.value.length === 0) {
+          setErrorText("No items found with the selected filters.");
+          setpropertiesData([]);  // Clear any existing data
+        } else {
+          const listingKeys = response.value.map((property: any) => property.ListingKey);
+          const mediaMap = await fetchMediaPropertyData(listingKeys);
+  
+          const enrichedProperties = response.value.map((property: any) => ({
+            ...property,
+            media: mediaMap[property.ListingKey] || [],
+          }));
+  
+          posts = enrichedProperties;
+  
+          setpropertiesData(posts);
+  
+          if (response['@odata.count']) {
+            setTotalProperties(response['@odata.count']);
+          }
+  
+          setErrorText("");
+        }
+  
+        setLoading(false);
+      } catch (err) {
+        console.log(err);
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unknown error occurred');
+        }
+      }
+      setIsLoading(false);
     };
-
+  
     fetchData();
-  }, [currentPage, itemsPerPages, key, propertyType ]);
+  }, [
+    currentPage, 
+    itemsPerPages, 
+    key, 
+    propertyType, 
+    propertyTypePages, 
+    distanceTime, 
+    forSale, 
+    forSold, 
+    distanceSoldTime, 
+    selectedPropertySubType, 
+    maxPrice, 
+    minPrice,
+    bathRooms,
+    bedRooms 
+  ]);
+  
 
-
-
-  // Calculate range
+  // Calculate and pagination
   const startIndex = (currentPage - 1) * itemsPerPages + 1;
   const endIndex = Math.min(currentPage * itemsPerPages, totalProperties);
-
   const totalPages = Math.ceil(totalProperties / itemsPerPages); // Calculate total pages
 
-  const handlePageChange = (pageNumber: number) => {
-    setCurrentPage(pageNumber); // Update current page
+  // Function to calculate visible pages
+  const getVisiblePages = (currentPage: number, totalPages: number): number[] => {
+      const maxVisiblePages = 3; // Number of visible pages at a time
+      const pages: number[] = [];
+  
+      // Determine start and end of range
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+  
+      // Adjust range if close to edges
+      if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+  
+      // Fill pages array
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+      return pages;
+  };
+  
+  const visiblePages = getVisiblePages(currentPage, totalPages);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Save the current page for the selected propertyType
+    setLoading(true);
+
+    setPropertyTypePages((prevState) => ({
+      ...prevState,
+      [propertyType]: page, // Store page for current property type
+    }));
+
+    window.scrollTo({
+      top: 0, // Scroll to the very top of the page
+      behavior: "smooth", // Smooth scroll for a better user experience
+    });
+  };
+
+  // Handle Dropdown Filters
+  const handleDropdownChange = (value: string) => {
+    setForSale( true );
+    setLoading(  true );
+    setselectedForSaleValue(value);
+    setForSold(false); // Deactivate "For Sold"
+    setselectedSoldValue(''); // Clear the selected value for "For Sold"
+    setDistanceSoldTime(null); // Clear any numerical value for "For Sold"
+
+    const numericValue = value !== '' ? parseInt(value, 10) : null;    
+    setDistanceTime(numericValue);
+  };
+
+  const handleSoldChanges = ( value: string ) => {
+    setForSold( true );
+    setForSale( false );
+    setselectedSoldValue( value );
+    setLoading(  true );
+
+    // Reset "For Sale" dropdown
+    setselectedForSaleValue(''); // Clear the selected value for "For Sale"
+    setDistanceTime(null); 
+
+    const numericValue = value !== '' ? parseInt(value, 10) : null;    
+    setDistanceSoldTime(numericValue);
+  };
+
+  const handlePropertySubType = ( value: string ) => {
+    setLoading(  true );
+    setselectedPropertySubType(value);
+  };  
+  
+  const handleBedRooms = ( value: string ) => {
+    setLoading(true);
+    setBedRooms(value);
+  };  
+  const handleBathRooms = ( value: string ) => {
+    setLoading(true);
+    setBathRooms(value);
   };
 
   if (loading) {
@@ -449,25 +699,31 @@ const ListingThirteenArea = () => {
     setShowSort(false);
   };
 
+  const handlePriceSelect = (min: string | null, max: string | null) => {
+    const cleanedMin = min ? parseFloat(min.replace(/[$,]/g, '')) : null;
+    const cleanedMax = max ? parseFloat(max.replace(/[$,]/g, '')) : null;
+
+    setMinPrice(cleanedMin);
+    setMaxPrice(cleanedMax);
+    //setLoading( true );
+  };
+
   const forSaleOptions = ["7 Days", "30 Days", "60 Days", "90 Days"];
   const bathOptions = ["0", "1+", "2+", "3+", "4+", "5+", "6+"];
   const typeOptions = [
     {
-      heading: "Freehold",
       options: ["Detached", "Semi Detached", "Townhouse"],
     },
     {
-      heading: "Condo",
       options: ["Apartment", "Detached", "Semi Detached", "Townhouse"],
     },
     {
-      heading: "Commercial",
       options: ["All Commercial", "Detached", "Semi Detached", "Townhouse"],
     },
   ];
 
-  const minOptions = ["$0", "$20", "$5,000", "$10,000", "$1,000,00"];
-  const maxOptions = ["$400", "$400,000", "$500,000", "$600,000", "$1,000,000"];
+  const minOptions = ["$0", "$20", "$5,000", "$10,000", "$1,000,00", "$10,000,000"];
+  const maxOptions = ["$400", "$400,000", "$500,000", "$600,000", "$1,000,000", "$100,000,000"];
 
   const searchOptions = [
     "Toronto",
@@ -478,25 +734,13 @@ const ListingThirteenArea = () => {
     "Richmond Hill, York",
     "Markham, York",
   ];
-  interface Media {
-    ClassName: string;
-    MediaCategory: string;
-    MediaKey: string;
-    MediaModificationTimestamp: string;
-    MediaObjectID: string;
-    MediaStatus: string;
-    MediaType: string;
-    MediaURL: string;
-  }
 
   const findActiveImageUrl = (media: Media[]): string => {
     const activeImage = media.find(
       (m) => m.MediaStatus === 'Active' && m.MediaType.startsWith('image')
     );
-    return activeImage ? activeImage.MediaURL : ''; // Provide a fallback URL or handle cases where no image is found
+    return activeImage ? activeImage.MediaURL : ''; // Provide a fallback URL or handle
   };
-
-  
 
   return (
     <div className="w-[100vw] mt-[115px] ">
@@ -550,16 +794,6 @@ const ListingThirteenArea = () => {
         <div className="w-full md:block hidden py-[2px] px-[2px]">
           <div className="md:flex justify-between items-center md:px-[22px] md:w-[96%] w-full m-auto">
             <div className="md:flex justify-start items-center gap-2 w-full">
-              {/* <div
-                className="w-[288px] flex relative justify-center items-center px-2 rounded-[8px] border border-[#b3b3b3] h-[40px]"
-              >
-                <input
-                  type="text"
-                  placeholder="City, Keyword, MLS#"
-                  className=" h-full  "
-                />
-                <CiSearch className="absolute z-[99] top-[20%]  right-2 text-[24px] text-[#b3b3b3]" />
-              </div> */}
               <div
                 ref={containerRef}
                 className="w-[288px] flex relative justify-center items-center px-2 rounded-[8px] border border-[#b3b3b3] h-[40px]"
@@ -596,6 +830,10 @@ const ListingThirteenArea = () => {
                   options={forSaleOptions}
                   placeholder="For Sale"
                   width={"w-[50%]"}
+                  value={selectedForSaleValue}
+                  onSelect={(selectedValue) => {
+                    handleDropdownChange(selectedValue);
+                  }}
                   style={
                     "text-[16px] text-black rounded-l-[8px]   pl-3 pr-1 flex justify-around items-center h-full cursor-pointer"
                   }
@@ -608,25 +846,40 @@ const ListingThirteenArea = () => {
                   style={
                     "text-[16px] text-black rounded-l-[8px]   pl-3 pr-1 flex justify-around items-center h-full cursor-pointer"
                   }
+                  value={selectedSoldValue}
+                  onSelect={(selectedValue) => {
+                    handleSoldChanges(selectedValue);
+                  }}
                 />
               </div>
 
               <CustomDropdown
-                options={typeOptions}
+                options={propertySubTypes}
                 placeholder="Type"
-                width={""}
+                value={selectedPropertySubType}
                 style={
                   "h-[40px] flex px-2 justify-center gap-3 items-center w-[95px] rounded-[8px] border border-[#b3b3b3] text-black cursor-pointer"
                 }
+                onSelect={(selectedValue) => {
+                  handlePropertySubType(selectedValue);
+                }}
               />
 
-              <PriceDropDown minOptions={minOptions} maxOptions={maxOptions} />
+              <PriceDropDown 
+                minOptions={minOptions} 
+                maxOptions={maxOptions} 
+                onSelect={handlePriceSelect} 
+              />
 
               <CustomDropdown
                 options={bathOptions}
                 placeholder="Bed"
                 width={"95px"}
                 arrow={false}
+                value={bedRooms}
+                onSelect={(selectedValue) => {
+                  handleBedRooms(selectedValue);
+                }}
                 style={
                   "h-[40px] px-6 flex w-[95px] justify-center items-center  rounded-[8px] border border-[#b3b3b3] text-black cursor-pointer"
                 }
@@ -636,6 +889,10 @@ const ListingThirteenArea = () => {
                 placeholder="Bath"
                 width={"95px"}
                 arrow={false}
+                value={bathRooms}
+                onSelect={(selectedValue) => {
+                  handleBathRooms(selectedValue);
+                }}
                 style={
                   "h-[40px] px-6 flex w-[95px]  justify-center items-center  rounded-[8px] border border-[#b3b3b3] text-black cursor-pointer"
                 }
@@ -705,60 +962,57 @@ const ListingThirteenArea = () => {
         </div>
       </div>
 
-      {/* <div className="listing-type-filter">
-        <div className="wrapper">
-          <ul className="style-none d-flex flex-wrap align-items-center justify-content-center justify-content-xxl-between">
-            <li>Select Type:</li>
-            {select_type.map((select, i) => (
-              <li key={i}>
-                <Link
-                  href="#"
-                  className={selectedType === select ? "active" : ""}
-                  onClick={() => handleTypeClick(select)}
-                >
-                  {select}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div> */}
-      <div className="w-full md:flex hidden justify-center items-center flex-wrap   gap-8 md:pt-[30px] py-[2px] z-10 relative">
-        {mapTabs.map((tab, index) => (
+      <div className="w-full md:flex hidden justify-center items-center flex-wrap   gap-8 md:pt-[30px] py-[2px] relative">
+        {typeFilter.map((tab, index) => (
           <div
             key={index}
-            className={`flex justify-center px-8 h-[32px] rounded-[20px]  md:text-[18px] text-[15px] md:w-[190px] w-[31%]  font-urbanist  items-center cursor-pointer ${
-              activeTab === tab.value
+            className={`flex justify-center px-8 py-1 rounded-[20px]  md:text-[18px] text-[15px] font-urbanist  items-center cursor-pointer ${
+              activeTab === tab.LookupValue
                 ? "bg-[#6965fd] text-white font-[500]"
                 : "border-1 border-[#b3b3b3] text-black font-normal"
             } `}
           >
-            <button onClick={() => handleActiveTab(tab.value)}>{tab.label}</button>
+            <button onClick={() => handleActiveTab(tab.LookupValue)}>{tab.LookupValue}</button>
           </div>
         ))}
       </div>
 
-      <div className="wrapper -mb-11">
+      <div className="wrapper">
         <div className="row gx-0">
           <div className="w-full">
-            <div className="ps-3 pe-3 ps-md-4 pe-md-4 ps-xxl-5 pe-xxl-5 pt-50 pb-200 xl-pb-120 md-pb-80">
+            <div className="ps-3 pe-3 ps-md-4 pe-md-4 ps-xxl-5 pe-xxl-5 pt-50 pb-11">
               <div className="w-full md:my-0 my-0 ">
                 <div className="md:flex justify-between items-center  md:px-3 px-2  pt-[2px]">
-                  <div className=" text-[14px] text-[#4d4d4d] font-[400]">
-                    Showing{" "}
-                    <span className="font-abhaya text-black">
-                      {" "}
-                      {startIndex}-{endIndex} of {totalProperties}
-                    </span>{" "}
-                    results
-                  </div>
+                  { errorText ? (
+                    <div className=" text-[14px] text-[#4d4d4d] font-[400]">
+                      Showing{" "}
+                      <span className="font-abhaya text-black">
+                        0
+                      </span>{" "}
+                      results
+                    </div>
+                  ) : (
+                    <div className=" text-[14px] text-[#4d4d4d] font-[400]">
+                      Showing{" "}
+                      <span className="font-abhaya text-black">
+                        {" "}
+                        {startIndex}-{endIndex} of {totalProperties}
+                      </span>{" "}
+                      results
+                    </div>
+                  ) }
                 </div>
               </div>
               {styleView === "grid" ? (
                 <div className="flex justify-center items-center mt-0">
                   <>
+                    <div className="grid grid-cols-1">
+                      { errorText }
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 ">
-                      {propertiesData.map((item: any, index: any) => (
+                      {propertiesData
+                      ?.filter((item: any) => findActiveImageUrl(item.media))
+                      .map((item: any, index: any) => (
                         <div
                           key={index}
                           className="rounded-xl shadow-md"
@@ -884,7 +1138,9 @@ const ListingThirteenArea = () => {
                 </div>
               ) : (
                 <div className="flex flex-col justify-center items-center gap-9 w-full m-auto">
-                  {propertiesData?.map((item: any, index: any) => (
+                  {propertiesData
+                  ?.filter((item: any) => findActiveImageUrl(item.media))
+                  .map((item: any, index: any) => (
                     <div
                       key={index}
                       className="md:flex justify-start items-start md:h-[300px] h-auto w-full bg-[#f4f4f4]"
@@ -1068,25 +1324,52 @@ const ListingThirteenArea = () => {
         </div>
       </div>
 
-      <div className="flex justify-center items-center gap-4 mb-[80px] -mt-[130px]">
+      <div className="flex justify-center items-center gap-4 mb-[80px]">
         <div className="flex gap-2 justify-between items-center text-black">
-          {/* {Array.from({ length: totalPages }, (_, index) => (
-            <div
-              key={index + 1}
-              className={`hover:text-white hover:bg-[#aeacff] hover:p-2 w-[30px] h-[30px] flex justify-center items-center cursor-pointer text-[17px] ${
-                currentPage === index + 1 ? "bg-[#6965FD] text-white" : ""
-              }`}
-              onClick={() => handlePageChange(index + 1)}
-            >
-              {index + 1}
-            </div>
-          ))} */}
+          <div
+          className={`flex justify-start gap-2 items-center text-[17px] cursor-pointer ${
+            currentPage === 1 ? "text-gray-400 cursor-not-allowed" : "text-black"
+          }`}
+          onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+        >
+          <HiOutlineArrowLongLeft />
+          <p>Prev</p>
         </div>
+          {/* Render visible pages */}
+          {visiblePages.map((page) => (
+            <div
+              key={page}
+              className={`hover:text-white hover:bg-[#aeacff] hover:p-2 w-[30px] h-[30px] flex justify-center items-center cursor-pointer text-[17px] ${
+                currentPage === page ? "bg-[#6965FD] text-white" : ""
+              }`}
+              onClick={() => handlePageChange(page)}
+            >
+              {page}
+            </div>
+          ))}
+
+          {/* Add ellipsis if not showing the last page */}
+          {totalPages > visiblePages[visiblePages.length - 1] && (
+            <div className="text-[17px]">...</div>
+          )}
+
+          {/* Render the last page if it's not in the visible range */}
+          {totalPages > visiblePages[visiblePages.length - 1] && (
+            <div
+              className="hover:text-white hover:bg-[#aeacff] hover:p-2 w-[30px] h-[30px] flex justify-center items-center cursor-pointer text-[17px]"
+              onClick={() => handlePageChange(totalPages)}
+            >
+              {totalPages}
+            </div>
+          )}
+        </div>
+
+        {/* Last page navigation */}
         <div
           className="flex justify-start gap-2 items-center text-[17px] text-black cursor-pointer"
           onClick={() => handlePageChange(totalPages)}
         >
-          <p>Last</p>
+          <p>Next</p>
           <HiOutlineArrowLongRight />
         </div>
       </div>
