@@ -998,7 +998,7 @@ const ListingThirteenArea = () => {
                         {" "}
                         {startIndex}-{endIndex} of {totalProperties}
                       </span>{" "}
-                      results
+                      results 
                     </div>
                   ) }
                 </div>
