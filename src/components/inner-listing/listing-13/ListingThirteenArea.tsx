@@ -524,11 +524,8 @@ const ListingThirteenArea = () => {
   
         if (!response || response.properties.length === 0) {
           setErrorText("No items found with the selected filters.");
-          setpropertiesData([]);  // Clear any existing data
-        } else {
-          // const listingKeys = response.value.map((property: any) => property.ListingKey);
-          // const mediaMap = await fetchMediaPropertyData(listingKeys);
-  
+          setpropertiesData([]); 
+        } else {  
           const enrichedProperties = response.properties.map((property: any) => ({
             ...property
           }));
