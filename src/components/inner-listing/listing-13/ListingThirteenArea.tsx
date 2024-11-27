@@ -519,25 +519,26 @@ const ListingThirteenArea = () => {
   
         let response: any;
         response = await fetchLisingPropertyData(filters);
+
+        console.log(response);
   
-        if (!response || response.value.length === 0) {
+        if (!response || response.properties.length === 0) {
           setErrorText("No items found with the selected filters.");
           setpropertiesData([]);  // Clear any existing data
         } else {
-          const listingKeys = response.value.map((property: any) => property.ListingKey);
-          const mediaMap = await fetchMediaPropertyData(listingKeys);
+          // const listingKeys = response.value.map((property: any) => property.ListingKey);
+          // const mediaMap = await fetchMediaPropertyData(listingKeys);
   
-          const enrichedProperties = response.value.map((property: any) => ({
-            ...property,
-            media: mediaMap[property.ListingKey] || [],
+          const enrichedProperties = response.properties.map((property: any) => ({
+            ...property
           }));
   
           posts = enrichedProperties;
   
           setpropertiesData(posts);
   
-          if (response['@odata.count']) {
-            setTotalProperties(response['@odata.count']);
+          if (response.totalProperties > 0 ) {
+            setTotalProperties(response.totalProperties);
           }
   
           setErrorText("");
@@ -743,12 +744,13 @@ const ListingThirteenArea = () => {
   };
 
   return (
-    <div className="w-[100vw] mt-[115px] ">
-      <div className="w-[100vw]">
-        <div className="md:hidden block relative w-[97%] m-auto px-2">
+    <div className="w-[100vw] mt-[115px]">
+      <div className="w-[100vw] mx-auto">
+      
+        <div className="md:hidden block relative w-full m-auto px-4">
           <div
             onClick={() => handleShow()}
-            className=" flex  rounded-md justify-between px-2 py-2 items-center bg-white shadow-lg "
+            className="flex rounded-md justify-between px-2 py-2 items-center bg-white shadow-lg "
           >
             <p>
               Advanced Filters{" "}
@@ -757,7 +759,7 @@ const ListingThirteenArea = () => {
             <MdKeyboardArrowDown />
           </div>
           {show && (
-            <div className="absolute w-[95%] m-auto z-[999] px-2 py-1 top-8 left-[10px]  bg-white shadow-lg rounded-md">
+            <div className="absolute w-[95%] m-auto z-[999] px-4 py-1 top-8 left-[10px]  bg-white shadow-lg rounded-md">
               {advancedFilters.map((option, index) => (
                 <div key={index} className="relative">
                   <div
@@ -791,8 +793,8 @@ const ListingThirteenArea = () => {
           )}
         </div>
 
-        <div className="w-full md:block hidden py-[2px] px-[2px]">
-          <div className="md:flex justify-between items-center md:px-[22px] md:w-[96%] w-full m-auto">
+        <div className="w-full mx-auto md:block hidden py-[2px] px-4">
+          <div className="md:flex justify-between items-center w-full pr-1">
             <div className="md:flex justify-start items-center gap-2 w-full">
               <div
                 ref={containerRef}
@@ -912,7 +914,8 @@ const ListingThirteenArea = () => {
                 }
               />
             </div>
-            <div className="flex justify-end items-center  w-full gap-2">
+
+            <div className="flex justify-end items-center w-full gap-2 ml-1">
               <div
                 className="h-[40px] w-[89px] relative text-[14px] text-black rounded-[8px]  border border-[#b3b3b3] flex justify-center gap-1 items-center cursor-pointer"
                 onClick={() => handleShowSort()}
@@ -962,7 +965,7 @@ const ListingThirteenArea = () => {
         </div>
       </div>
 
-      <div className="w-full md:flex hidden justify-center items-center flex-wrap   gap-8 md:pt-[30px] py-[2px] relative">
+      <div className="w-full mx-auto md:flex hidden justify-between items-center flex-wrap gap-3 md:pt-[30px] py-4 pb-2 relative px-4">
         {typeFilter.map((tab, index) => (
           <div
             key={index}
@@ -980,7 +983,7 @@ const ListingThirteenArea = () => {
       <div className="wrapper">
         <div className="row gx-0">
           <div className="w-full">
-            <div className="ps-3 pe-3 ps-md-4 pe-md-4 ps-xxl-5 pe-xxl-5 pt-50 pb-11">
+            <div className="ps-3 pe-3 ps-md-4 pe-md-4 ps-xxl-4 pe-xxl-4 pt-9 pb-11">
               <div className="w-full md:my-0 my-0 ">
                 <div className="md:flex justify-between items-center  md:px-3 px-2  pt-[2px]">
                   { errorText ? (
@@ -1004,12 +1007,12 @@ const ListingThirteenArea = () => {
                 </div>
               </div>
               {styleView === "grid" ? (
-                <div className="flex justify-center items-center mt-0">
+                <div className="flex justify-center items-center mt-0 w-full">
                   <>
                     <div className="grid grid-cols-1">
                       { errorText }
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 ">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 w-full">
                       {propertiesData
                       ?.filter((item: any) => findActiveImageUrl(item.media))
                       .map((item: any, index: any) => (
@@ -1024,7 +1027,7 @@ const ListingThirteenArea = () => {
                                 <div className="absolute w-full top-5 left-0 px-[7px]  flex justify-between items-center">
                                   <div
                                     className={` font-[500] rounded-r-[8px] text-[12px] font-urbanist px-2 w-auto h-[21.0px] flex justify-center items-center text-white text-black-500 ${
-                                      item?.type === "SOLD 02/20/2024"
+                                      item.propertyDetails?.type === "SOLD 02/20/2024"
                                         ? "bg-[#EB272A]"
                                         : item?.type === "For Rent"
                                         ? "bg-[#6965FD]"
@@ -1033,13 +1036,13 @@ const ListingThirteenArea = () => {
                                         : "bg-[#6CCFAC]"
                                     } `}
                                   >
-                                    {item.TransactionType}
+                                    {item.propertyDetails.TransactionType}
                                   </div>
                                   <Link
                                     href="#"
                                     className="bg-white text-black rounded-l-[8px] px-2 py-[2px] text-[12px]"
                                   >
-                                    {item.PropertySubType}
+                                    {item.propertyDetails.PropertySubType}
                                   </Link>
                                 </div>
 
@@ -1049,7 +1052,7 @@ const ListingThirteenArea = () => {
                                     src={findActiveImageUrl(item.media)}
                                     width={400}
                                     height={300}
-                                    className="h-[300px] object-cover"
+                                    className="h-[300px] object-cover w-full"
                                   />
                                 </div>
                               </div>
@@ -1057,20 +1060,20 @@ const ListingThirteenArea = () => {
                             <div className="property-info px-2 mt-1 pt-2 pb-[2px]">
                               <div className="d-flex flex-wrap align-items-start justify-content-between ">
                                 <Link
-                                  href={`/listing_details_01?id=${item.ListingKey}`}
+                                  href={`/listing_details_01?id=${item.propertyDetails.ListingKey}`}
                                   className="text-[20px] text-black  font-urbanist font-[500]"
                                   style={{ maxWidth: "90%" }}
                                 >
-                                  {`${item?.UnitNumber !== null ? `${item?.UnitNumber} -` : ""} ${ item?.StreetNumber} ${item?.StreetName} ${item?.StreetSuffix}`}
+                                  {`${item.propertyDetails?.UnitNumber !== null ? `${item.propertyDetails?.UnitNumber} -` : ""} ${ item.propertyDetails?.StreetNumber} ${item.propertyDetails?.StreetName} ${item.propertyDetails?.StreetSuffix}`}
                                   
                                 </Link>
                                 <p className="text-[12px] text-[#999999]">
-                                  {timeAgo(item.ModificationTimestamp)}
+                                  {timeAgo(item.propertyDetails.ModificationTimestamp)}
                                 </p>
                               </div>
                               <div className="d-flex flex-wrap align-items-center mt-1 justify-content-between ">
                                 <p className="text-[14px] text-[#999999]">
-                                  {`${item?.UnparsedAddress !== null ? `${item?.UnparsedAddress}` : ""}`} 
+                                  {`${item.propertyDetails?.UnparsedAddress !== null ? `${item.propertyDetails?.UnparsedAddress}` : ""}`} 
                                   {/* {`- ${item?.City !== null ? `${item?.City}` : ""}`} */}
                                 </p>
                               </div>
@@ -1079,7 +1082,7 @@ const ListingThirteenArea = () => {
                                 <li className="flex justify-start items-start gap-1">
                                   <LiaBedSolid className="text-black text-xl mt-1" />
                                   <p className="text-black text-[16px] font-[400]">
-                                    0{item.BedroomsTotal ? `${item.BedroomsTotal}` : ""}
+                                    0{item.propertyDetails.BedroomsTotal ? `${item.propertyDetails.BedroomsTotal}` : ""}
                                   </p>
                                   <p className="text-[#999999] text-[16px] font-[400] font-urbanist">
                                     bed
@@ -1088,7 +1091,7 @@ const ListingThirteenArea = () => {
                                 <li className="flex justify-start items-start gap-1">
                                   <PiBathtub className="text-black text-xl mt-1" />
                                   <p className="text-black text-[16px]  font-[400]">
-                                    0{item.BathroomsTotalInteger ? `${item.BathroomsTotalInteger}` : ""}
+                                    0{item.propertyDetails.BathroomsTotalInteger ? `${item.propertyDetails.BathroomsTotalInteger}` : ""}
                                   </p>
                                   <p className="text-[#999999]  text-[16px] font-[400] font-urbanist">
                                     bath
@@ -1097,7 +1100,7 @@ const ListingThirteenArea = () => {
                                 <li className="flex justify-start items-start gap-1">
                                   <PiGarage className="text-black text-xl mt-1" />
                                   <p className="text-black text-[16px]  font-[400]">
-                                    0{item.ParkingSpaces ? `${item.ParkingSpaces}` : ""}
+                                    0{item.propertyDetails.ParkingSpaces ? `${item.propertyDetails.ParkingSpaces}` : ""}
                                   </p>
                                   <p className="text-[#999999] text-[16px] font-[400] font-urbanist">
                                     Parking
@@ -1108,22 +1111,22 @@ const ListingThirteenArea = () => {
                               <div className="pl-footer py-1 border-t  border-[#a8a8a8] border-dashed d-flex align-items-center justify-content-between">
                                 <div className=" text-[24px] font-[500]  text-[#000] ">
                                   {
-                                    item.PriceChangeTimestamp ? (
+                                    item.propertyDetails.PriceChangeTimestamp ? (
                                       <span className="flex items-center gap-2">
                                         <span className="line-through font-normal text-[#999] text-[24px]">
-                                          ${item.OriginalListPrice}
+                                          ${item.propertyDetails.OriginalListPrice}
                                         </span>
                                         <span className="text-[#FF4A4A] font-semibold">
-                                          ${item.ListPrice}
+                                          ${item.propertyDetails.ListPrice}
                                         </span>
                                       </span>
                                     ) : (
-                                      "$" + item.ListPrice
+                                      "$" + item.propertyDetails.ListPrice
                                     )
                                   }
                                 </div>
                                 <Link
-                                  href={`/listing_details_01?id=${item.ListingKey}`}
+                                  href={`/listing_details_01?id=${item.propertyDetails.ListingKey}`}
                                   className="h-10 w-10 bg-[#6965fd] flex justify-center items-center"
                                 >
                                   <i className="bi text-white bi-arrow-up-right"></i>
@@ -1154,13 +1157,13 @@ const ListingThirteenArea = () => {
                           className="w-full h-full bg-contain"
                         />
                         <div className="absolute left-0  top-3 px-2 flex justify-center font-[500] text-[12px] text-white  bg-[#6CCFAC] w-[68.94px] h-[21.0px] items-center rounded-tr-[10px] rounded-br-[10px]">
-                          {item.TransactionType}
+                          {item.propertyDetails.TransactionType}
                         </div>
                       </div>
                       <div className=" px-3 py-3 w-full">
                         <div className="md:w-[95%] w-full mx-auto flex justify-between items-center">
                           <h2 className="text-[26px] text-black  font-[500]">
-                            {item.CrossStreet}
+                            {item.propertyDetails.CrossStreet}
                           </h2>
                           <div className="flex justify-end items-center gap-3">
                             <Link href="#">
@@ -1177,17 +1180,17 @@ const ListingThirteenArea = () => {
                         {/* <div className="flex justify-end w-full"> */}
                           <div className="flex justify-between items-center w-full md:w-[95%] mx-auto">
                             <div className="  text-[18px] font-[400]  text-[#545454] mt-2">
-                              {item.UnparsedAddress}
+                              {item.propertyDetails.UnparsedAddress}
                             </div>
                             <div className="  text-[18px] font-[400]  text-[#545454] mt-2">
-                              {item.City}
+                              {item.propertyDetails.City}
                             </div>
                           {/* </div> */}
                         </div>
                         <div className="md:w-[95%] w-full mx-auto flex flex-wrap justify-between items-center  md:mt-[40px] mt-[20px]">
                           <div className="md:w-auto w-[32%]">
                             <p className="text-[20px] text-black font-[400]">
-                              {item.PropertySubType}
+                              {item.propertyDetails.PropertySubType}
                             </p>
                             <p className="text-[#626262] text-[16px] ">Type</p>
                           </div>
@@ -1202,7 +1205,7 @@ const ListingThirteenArea = () => {
                           </div>
                           <div className="md:w-auto w-[32%]">
                             <p className="text-[20px] text-black font-[400]">
-                              0{item.BedroomsTotal ? `${item.BedroomsTotal}` : ""}
+                              0{item.propertyDetails.BedroomsTotal ? `${item.propertyDetails.BedroomsTotal}` : ""}
                             </p>
                             <p className="text-[#626262] text-[16px] ">bed</p>
                           </div>
@@ -1217,7 +1220,7 @@ const ListingThirteenArea = () => {
                           </div>
                           <div className="md:w-auto w-[32%]">
                             <p className="text-[20px] text-black font-[400]">
-                              0{item.BathroomsTotalInteger ? `${item.BathroomsTotalInteger}` : ""}
+                              0{item.propertyDetails.BathroomsTotalInteger ? `${item.propertyDetails.BathroomsTotalInteger}` : ""}
                             </p>
                             <p className="text-[#626262] text-[16px] ">bath</p>
                           </div>
@@ -1232,7 +1235,7 @@ const ListingThirteenArea = () => {
                           </div>
                           <div className="md:w-auto w-[32%]">
                             <p className="text-[20px] text-black font-[400]">
-                              0{item.KitchensTotal ? `${item.KitchensTotal}` : ""}
+                              0{item.propertyDetails.KitchensTotal ? `${item.propertyDetails.KitchensTotal}` : ""}
                             </p>
                             <p className="text-[#626262] text-[16px] ">
                               Kitchen
@@ -1273,9 +1276,9 @@ const ListingThirteenArea = () => {
                         </div>
                         <div className="md:w-[95%] w-full mx-auto flex justify-between items-center mt-[40px]">
                           <p className=" text-[26px] text-black font-[500]">
-                            {"$" + item.ListPrice}
+                            {"$" + item.propertyDetails.ListPrice}
                           </p>
-                          <Link href={`/listing_details_01?id=${item.ListingKey}`}>
+                          <Link href={`/listing_details_01?id=${item.propertyDetails.ListingKey}`}>
                             <div className="flex bg-[#6965FD] justify-center items-center w-[47.37px] h-[47.37px]">
                               <GoArrowUpRight className="text-white text-[20px]" />
                             </div>

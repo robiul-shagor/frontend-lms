@@ -206,7 +206,7 @@ const FilterMoreOptions: React.FC<CustomDropdownProps> = ({
 
       {/* Dropdown options */}
       {isOpen && (
-        <div className="absolute mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 w-full md:min-w-[500px] p-3">
+        <div className="absolute mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 w-full md:min-w-[500px] p-3 right-0">
           <p className="text-black text-[24px] font-[600] mb-2">More Options</p>
           {/* First */}
           <p className="text-black text-[14px] font-[600]">

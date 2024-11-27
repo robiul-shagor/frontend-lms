@@ -106,11 +106,11 @@ export const fetchLisingPropertyData = async ({
     if (searchQuery) {
       // Check if the searchQuery is likely an MLS ID (assuming MLS IDs are numeric)
       if (/^[A-Za-z]\d+$/.test(searchQuery)) {
-        filterConditions.push(`MlsId eq '${searchQuery}'`);
+        filterConditions.push(`MlsId='${searchQuery}'`);
       }
       // Check if the searchQuery might be a city name (assuming no digits and possibly spaces)
       else if (/^[A-Za-z\s]+$/.test(searchQuery)) {
-        filterConditions.push(`City eq '${searchQuery}'`);
+        filterConditions.push(`City='${searchQuery}'`);
       }
       // // Assume the input is a keyword if it does not meet the other criteria
       // else {
@@ -119,42 +119,30 @@ export const fetchLisingPropertyData = async ({
     }
 
     if (isSold) {
-      filterConditions.push(`MlsStatus eq 'Sold'`);
+      filterConditions.push(`MlsStatus=Sold`);
     } else {
-      filterConditions.push(`MlsStatus eq 'New'`);
+      filterConditions.push(`MlsStatus=New`);
     }
 
     if (bedRooms) {
       const cleanedValueBed = bedRooms.replace('+', '');
-      //filterConditions.push(`BedroomsTotal ge '${cleanedValueBed}'`);
+      filterConditions.push(`BedroomsTotal=${cleanedValueBed}`);
     }
     
     if (bathRooms) {
       const cleanedValueBath = bathRooms.replace('+', '');
-      //filterConditions.push(`BathroomsTotalInteger ge '${cleanedValueBath}'`);
+      filterConditions.push(`BathroomsTotalInteger=${cleanedValueBath}`);
     }
 
     
     if (propertyType) {
       if( propertyType !== 'All') {
-        filterConditions.push(`PropertyType eq '${propertyType}'`);
+        filterConditions.push(`PropertyType=${propertyType}`);
       }
     }
 
     if( propertySubType ) {
-      if( propertyTypes ) {
-        filterConditions.push(`PropertyType eq '${propertyTypes}' and PropertySubType eq '${propertySubType}'`);
-      } else {
-        filterConditions.push(`PropertySubType eq '${propertySubType}'`);
-      }
-    }
-
-    // Apply price filters only if propertyTypes is selected
-    if (minPrice) {
-      filterConditions.push(`ListPrice ge ${minPrice}`);
-    }
-    if (maxPrice) {
-      filterConditions.push(`ListPrice le ${maxPrice}`);
+      filterConditions.push(`PropertySubType=${propertySubType}`);
     }
 
     if (isSold && typeof daysSoldSinceChange === 'number' && daysSoldSinceChange > 0) {
@@ -169,11 +157,11 @@ export const fetchLisingPropertyData = async ({
 
       // Apply the date range filter for MajorChangeTimestamp
       // it's work now need to apply sold data and page on pagination data should works also need to add preloader
-      filterConditions.push(`MajorChangeTimestamp ge ${isoEndDate}`);
+      filterConditions.push(`MajorChangeTimestamp=${isoEndDate}`);
     }
 
     if (forSale && typeof daysSinceChange === 'number' && daysSinceChange > 0) {
-      filterConditions.push(`ListPriceUnit eq 'For Sale'`);
+      filterConditions.push(`ListPriceUnit=For Sale`);
 
       // Calculate the date range (Today to Next 90 Days)
       const startDate = new Date(); // Start date is today
@@ -186,23 +174,27 @@ export const fetchLisingPropertyData = async ({
 
       // Apply the date range filter for MajorChangeTimestamp
       // it's work now need to apply sold data and page on pagination data should works also need to add preloader
-      filterConditions.push(`MajorChangeTimestamp ge ${isoEndDate}`);
+      filterConditions.push(`MajorChangeTimestamp=${isoEndDate}`);
+    }
+
+    // Apply price filters only if propertyTypes is selected
+    if (minPrice) {
+      filterConditions.push(`minPrice=${minPrice}`);
+    }
+    if (maxPrice) {
+      filterConditions.push(`maxPrice=${maxPrice}`);
     }
 
     // Join all filter conditions with 'and'
-    const filterQuery = filterConditions.join(' and ');
-    console.log(filterQuery);
+    const filterQuery = filterConditions.join('&');
 
-    const response = await fetch(`${WEB_URL}/odata/Property?$orderby=MajorChangeTimestamp&$skip=${skipValue}&$top=${pageSize}&$count=true&$filter=${encodeURIComponent(filterQuery)}`, {
-      headers: {
-        Authorization: `Bearer ${TOKEN_VOW}`,
-      },
-    });
+    const response = await fetch(`https://api-lms-alpha.vercel.app/api/properties/all-properties/?page=${page}&${(filterQuery)}`);
 
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
-    return await response.json();
+    const finalData = await response.json();
+    return finalData;
   } catch (error) {
     console.error("Error fetching property data:", error);
     const errorMessage = 

@@ -64,7 +64,7 @@ const [openLoginModal, setopenLoginModal] = useState(false)
             width={134}
             height={73}
             alt="logo"
-            className="md:w-[134px] w-[110px] md:h-[73px] h-[63px]"
+            className="md:w-[134px] w-[110px] md:h-[73px] h-[63px] -ml-4"
           />
         </Link>
 
