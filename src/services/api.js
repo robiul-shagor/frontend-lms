@@ -173,7 +173,6 @@ export const fetchLisingPropertyData = async ({
       const isoEndDate = endDate.toISOString();
 
       // Apply the date range filter for MajorChangeTimestamp
-      // it's work now need to apply sold data and page on pagination data should works also need to add preloader
       filterConditions.push(`MajorChangeTimestamp=${isoEndDate}`);
     }
 
