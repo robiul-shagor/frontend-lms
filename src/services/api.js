@@ -99,23 +99,18 @@ export const fetchLisingPropertyData = async ({
   daysSoldSinceChange = 0,
 } = {}) => {
   try {
-    const skipValue = (page - 1) * pageSize; // Calculate the number of items to skip
     let filterConditions = []; // Default filter condition
 
     // Determine the type of the search query and add the appropriate filter
     if (searchQuery) {
       // Check if the searchQuery is likely an MLS ID (assuming MLS IDs are numeric)
       if (/^[A-Za-z]\d+$/.test(searchQuery)) {
-        filterConditions.push(`MlsId='${searchQuery}'`);
+        filterConditions.push(`MlsId=${searchQuery}`);
       }
       // Check if the searchQuery might be a city name (assuming no digits and possibly spaces)
       else if (/^[A-Za-z\s]+$/.test(searchQuery)) {
-        filterConditions.push(`City='${searchQuery}'`);
+        filterConditions.push(`City=${searchQuery}`);
       }
-      // // Assume the input is a keyword if it does not meet the other criteria
-      // else {
-      //   filterConditions.push(`substringof('${searchQuery}', Description)`);
-      // }
     }
 
     if (isSold) {
@@ -134,7 +129,6 @@ export const fetchLisingPropertyData = async ({
       filterConditions.push(`BathroomsTotalInteger=${cleanedValueBath}`);
     }
 
-    
     if (propertyType) {
       if( propertyType !== 'All') {
         filterConditions.push(`PropertyType=${propertyType}`);
@@ -146,7 +140,6 @@ export const fetchLisingPropertyData = async ({
     }
 
     if (isSold && typeof daysSoldSinceChange === 'number' && daysSoldSinceChange > 0) {
-      // Calculate the date range (Today to Next 90 Days)
       const startDate = new Date(); // Start date is today
       const endDate = new Date();
       endDate.setDate(startDate.getDate() - daysSoldSinceChange); // Add 90 days to today
@@ -156,7 +149,6 @@ export const fetchLisingPropertyData = async ({
       const isoEndDate = endDate.toISOString();
 
       // Apply the date range filter for MajorChangeTimestamp
-      // it's work now need to apply sold data and page on pagination data should works also need to add preloader
       filterConditions.push(`MajorChangeTimestamp=${isoEndDate}`);
     }
 
@@ -187,7 +179,7 @@ export const fetchLisingPropertyData = async ({
     // Join all filter conditions with 'and'
     const filterQuery = filterConditions.join('&');
 
-    const response = await fetch(`https://api-lms-alpha.vercel.app/api/properties/all-properties/?page=${page}&${(filterQuery)}`);
+    const response = await fetch(`https://api-lms-alpha.vercel.app/api/properties/all-properties/?page=${page}&${filterQuery}`);
 
     if (!response.ok) {
       throw new Error('Network response was not ok');
