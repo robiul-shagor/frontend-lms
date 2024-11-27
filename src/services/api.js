@@ -203,7 +203,6 @@ export const fetchLisingPropertyData = async ({
   }
 };
 
-
 export const fetchPropertyLuxuryData = async (skipValue = 0) => {
   try {
     const response = await fetch(`${WEB_URL}/odata/Property?$skip=${skipValue}&$top=10&$count=true`, {
@@ -240,7 +239,6 @@ export const fetchIndividualProperty = async (key) => {
     throw new Error(error.message || "An error occurred during fetching Individual Property data.");
   }
 };
-
 
 // Process and display the properties
 export const displayLeaseProperties = async () => {

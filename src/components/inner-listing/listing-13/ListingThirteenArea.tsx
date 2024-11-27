@@ -540,7 +540,6 @@ const ListingThirteenArea = () => {
   
           setErrorText("");
         }
-  
         setLoading(false);
       } catch (err) {
         console.log(err);
