@@ -396,7 +396,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
                 Drive Parking
               </p>
               <p className="text-[#000] md:text-[17px] text-[15px] font-[400] ">
-                {`${propertyData?.ParkingSpaces !== null ? `${propertyData?.ParkingSpaces}` : ""}`}
+                {`${propertyData?.ParkingTotal !== null ? `${propertyData?.ParkingTotal}` : ""}`}
               </p>
             </div>
           </div>
@@ -444,7 +444,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
               Heat Source:
               </p>
               <p className="text-[#000] md:text-[17px] text-[15px] font-[400] ">
-              {`${propertyData?.CooliHeatSourceng !== null ? `${propertyData?.HeatSource}` : ""}`}
+              {`${propertyData?.HeatSource !== null ? `${propertyData?.HeatSource}` : ""}`}
               </p>
             </div>       
             
@@ -455,7 +455,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
               Water:
               </p>
               <p className="text-[#000] md:text-[17px] text-[15px] font-[400] ">
-              {`${propertyData?.Water !== null ? `${propertyData?.Water}` : ""}`}
+              {`${propertyData?.WaterSource !== null ? `${propertyData?.WaterSource}` : ""}`}
               </p>
             </div>         
             

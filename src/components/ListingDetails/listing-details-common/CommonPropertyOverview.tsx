@@ -24,8 +24,14 @@ interface CommonPropertyOverviewProps {
     BathroomsTotalInteger: string;
     LivingAreaRange: string;
     LotSizeDimensions: string;
-    BasementDescription: string;
+    Basement: string;
     ApproximateAge: string;
+    VirtualTourURLUnbranded: string;
+    FrontageLength: any;
+    LotDepth: any,
+    ArchitecturalStyle: any,
+    Acres: any, 
+    LotSizeRangeAcres: any
   };
 }
 
@@ -35,6 +41,10 @@ const CommonPropertyOverview = ({ data }: CommonPropertyOverviewProps ) => {
 
   const handleButtonClick = (buttonName: string) => {
     setSelectedButton(buttonName);
+
+    if (buttonName === "Virtual Tour" && data.VirtualTourURLUnbranded) {
+      window.open(data.VirtualTourURLUnbranded, "_blank"); // Open the URL in a new tab
+    }
   };
 
   const property_overview_data: DataType[] = [
@@ -59,19 +69,19 @@ const CommonPropertyOverview = ({ data }: CommonPropertyOverviewProps ) => {
     {
       id: 4,
       icon: <HiArrowPathRoundedSquare />,
-      value: data.LivingAreaRange,
+      value: data.FrontageLength,
       title: "Sqft.",
     },
     {
       id: 5,
       icon: icon_1,
-      value: data.LotSizeDimensions,
+      value: data.LotDepth,
       title: "Lot",
     },
     {
       id: 6,
       icon: "/assets/images/icon/basement.png",
-      value: data.BasementDescription,
+      value: data.Basement,
       title: "Basement",
     },
     {
@@ -79,6 +89,18 @@ const CommonPropertyOverview = ({ data }: CommonPropertyOverviewProps ) => {
       icon: <GoHourglass />,
       value: data.ApproximateAge,
       title: "Age",
+    },   
+    {
+      id: 8,
+      icon: icon_1,
+      value: data.ArchitecturalStyle,
+      title: "Sub Type",
+    },
+    {
+      id: 9,
+      icon: icon_1,
+      value: data.Acres,
+      title: "Acres",
     },
   ];
 
