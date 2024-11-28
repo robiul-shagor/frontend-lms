@@ -519,8 +519,6 @@ const ListingThirteenArea = () => {
   
         let response: any;
         response = await fetchLisingPropertyData(filters);
-
-        console.log(response);
   
         if (!response || response.properties.length === 0) {
           setErrorText("No items found with the selected filters.");

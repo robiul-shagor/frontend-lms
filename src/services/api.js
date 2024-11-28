@@ -99,87 +99,69 @@ export const fetchLisingPropertyData = async ({
   daysSoldSinceChange = 0,
 } = {}) => {
   try {
-    let filterConditions = []; // Default filter condition
+    const params = new URLSearchParams();
 
-    // Determine the type of the search query and add the appropriate filter
+    // Add default parameters
+    params.append('page', page);
+    if (pageSize) params.append('pageSize', pageSize);
+
+    // Handle search query
     if (searchQuery) {
-      // Check if the searchQuery is likely an MLS ID (assuming MLS IDs are numeric)
       if (/^[A-Za-z]\d+$/.test(searchQuery)) {
-        filterConditions.push(`MlsId=${searchQuery}`);
-      }
-      // Check if the searchQuery might be a city name (assuming no digits and possibly spaces)
-      else if (/^[A-Za-z\s]+$/.test(searchQuery)) {
-        filterConditions.push(`City=${searchQuery}`);
+        params.append('MlsId', searchQuery);
+      } else if (/^[A-Za-z\s]+$/.test(searchQuery)) {
+        params.append('City', searchQuery);
       }
     }
 
-    if (isSold) {
-      filterConditions.push(`MlsStatus=Sold`);
-    } else {
-      filterConditions.push(`MlsStatus=New`);
-    }
+    // Add sold or new status
+    params.append('MlsStatus', isSold ? 'Sold' : 'New');
 
+    // Add filters
     if (bedRooms) {
-      const cleanedValueBed = bedRooms.replace('+', '');
-      filterConditions.push(`BedroomsTotal=${cleanedValueBed}`);
+      params.append('BedroomsTotal', bedRooms.replace('+', ''));
     }
-    
     if (bathRooms) {
-      const cleanedValueBath = bathRooms.replace('+', '');
-      filterConditions.push(`BathroomsTotalInteger=${cleanedValueBath}`);
+      params.append('BathroomsTotalInteger', bathRooms.replace('+', ''));
+    }
+    if (propertyType && propertyType !== 'All') {
+      params.append('PropertyType', propertyType);
+    }
+    if (propertySubType) {
+      params.append('PropertySubType', propertySubType);
     }
 
-    if (propertyType) {
-      if( propertyType !== 'All') {
-        filterConditions.push(`PropertyType=${propertyType}`);
-      }
+    // Handle price filters
+    if (minPrice > 0) {
+      params.append('minPrice', minPrice);
+    }
+    if (maxPrice > 0) {
+      params.append('maxPrice', maxPrice);
     }
 
-    if( propertySubType ) {
-      filterConditions.push(`PropertySubType=${propertySubType}`);
-    }
+    //console.log(`${minPrice} - ${maxPrice}`);
+    // Price filter should be problem
 
-    if (isSold && typeof daysSoldSinceChange === 'number' && daysSoldSinceChange > 0) {
-      const startDate = new Date(); // Start date is today
+    // Handle date filters
+    if (isSold && daysSoldSinceChange > 0) {
       const endDate = new Date();
-      endDate.setDate(startDate.getDate() - daysSoldSinceChange); // Add 90 days to today
-
-      // Convert both dates to ISO format strings
-      const isoStartDate = startDate.toISOString();
-      const isoEndDate = endDate.toISOString();
-
-      // Apply the date range filter for MajorChangeTimestamp
-      filterConditions.push(`MajorChangeTimestamp=${isoEndDate}`);
+      endDate.setDate(endDate.getDate() - daysSoldSinceChange);
+      params.append('MajorChangeTimestamp', endDate.toISOString());
     }
 
-    if (forSale && typeof daysSinceChange === 'number' && daysSinceChange > 0) {
-      filterConditions.push(`ListPriceUnit=For Sale`);
-
-      // Calculate the date range (Today to Next 90 Days)
-      const startDate = new Date(); // Start date is today
+    if (forSale && daysSinceChange > 0) {
       const endDate = new Date();
-      endDate.setDate(startDate.getDate() - daysSinceChange); // Add 90 days to today
-
-      // Convert both dates to ISO format strings
-      const isoStartDate = startDate.toISOString();
-      const isoEndDate = endDate.toISOString();
-
-      // Apply the date range filter for MajorChangeTimestamp
-      filterConditions.push(`MajorChangeTimestamp=${isoEndDate}`);
-    }
-
-    // Apply price filters only if propertyTypes is selected
-    if (minPrice) {
-      filterConditions.push(`minPrice=${minPrice}`);
-    }
-    if (maxPrice) {
-      filterConditions.push(`maxPrice=${maxPrice}`);
+      endDate.setDate(endDate.getDate() - daysSinceChange);
+      params.append('ListPriceUnit', 'For Sale');
+      params.append('MajorChangeTimestamp', endDate.toISOString());
     }
 
     // Join all filter conditions with 'and'
-    const filterQuery = filterConditions.join('&');
+    // const filterQuery = filterConditions.join('&');
 
-    const response = await fetch(`https://api-lms-alpha.vercel.app/api/properties/all-properties/?page=${page}&${filterQuery}`);
+    // console.log(`https://api-lms-alpha.vercel.app/api/properties/all-properties/?page=${page}&${encodeURIComponent(filterQuery)}`);
+
+    const response = await fetch(`https://api-lms-alpha.vercel.app/api/properties/all-properties/?${params.toString()}`);
 
     if (!response.ok) {
       throw new Error('Network response was not ok');
