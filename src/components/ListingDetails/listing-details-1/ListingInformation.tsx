@@ -200,7 +200,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
               </p>
             </div>            
             
-            <div
+            {/* <div
               className="md:w-2/5 w-full flex justify-between items-center"
             >
               <p className="text-black md:text-[17px] text-[15px] font-[400] ">
@@ -209,7 +209,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
               <p className="text-black md:text-[17px] text-[15px] font-[400]">
                 
               </p>
-            </div>         
+            </div>          */}
             
             <div
               className="md:w-2/5 w-full flex justify-between items-center"
@@ -218,7 +218,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
                 Original Price: 
               </p>
               <p className="text-black md:text-[17px] text-[15px] font-[400]">
-                {propertyData.OriginalListPrice}
+                ${propertyData.OriginalListPrice.toLocaleString()}
               </p>
             </div>         
             
@@ -229,7 +229,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
                 Taxes: 
               </p>
               <p className="text-black md:text-[17px] text-[15px] font-[400]">
-                {propertyData.TaxAnnualAmount}
+                ${propertyData.TaxAnnualAmount}
               </p>
             </div>
           </div>
@@ -261,18 +261,13 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
           <div className="flex mt-3 w-full gap-3 rounded-4 flex-wrap justify-between items-center bg-white py-3 rounded-2">
             <div className="md:w-2/5 w-full flex justify-between items-center">
               <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400]">Bedrooms :</p>
-              <p className="text-black md:text-[17px] text-[15px] font-[400]">0{propertyData.BedroomsTotal}</p>
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">{`${propertyData.BedroomsAboveGrade} + ${propertyData.BedroomsBelowGrade}`}</p> 
             </div>         
             
             <div className="md:w-2/5 w-full flex justify-between items-center">
               <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400]">Bathrooms :</p>
               <p className="text-black md:text-[17px] text-[15px] font-[400]">0{propertyData.BathroomsTotalInteger}</p>
-            </div>         
-            
-            <div className="md:w-2/5 w-full flex justify-between items-center">
-              <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400]">Washrooms :</p>
-              <p className="text-black md:text-[17px] text-[15px] font-[400]">0{propertyData.BathroomsTotalInteger}</p>
-            </div>     
+            </div>           
             
             <div className="md:w-2/5 w-full flex justify-between items-center">
               <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400]">Approx. Age :</p>
@@ -291,7 +286,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
             
             <div className="md:w-2/5 w-full flex justify-between items-center">
               <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400]">Property Type :</p>
-              <p className="text-black md:text-[17px] text-[15px] font-[400]">{`${propertyData?.PropertyType !== null ? `${propertyData?.PropertyType}` : "-"}`}</p>
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">{`${propertyData?.PropertySubType !== null ? `${propertyData?.PropertySubType}` : "-"}`}</p>
             </div>       
             
             <div className="md:w-2/5 w-full flex justify-between items-center">
@@ -302,6 +297,11 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
             <div className="md:w-2/5 w-full flex justify-between items-center">
               <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400]">Status :</p>
               <p className="text-black md:text-[17px] text-[15px] font-[400]">{`${propertyData?.TransactionType !== null ? `${propertyData?.TransactionType}` : ""}`}</p>
+            </div>      
+            
+            <div className="md:w-2/5 w-full flex justify-between items-center">
+              <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400]">Class :</p>
+              <p className="text-black md:text-[17px] text-[15px] font-[400]">{`${propertyData?.PropertyType !== null ? `${propertyData?.PropertyType}` : ""}`}</p>
             </div>
           </div>
         </div>
@@ -393,7 +393,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
               className="md:w-2/5 w-full flex justify-between items-center"
             >
               <p className="text-[#5a5a5a] md:text-[17px] text-[15px] font-[400] ">
-                Drive Parking
+                Total Parking
               </p>
               <p className="text-[#000] md:text-[17px] text-[15px] font-[400] ">
                 {`${propertyData?.ParkingTotal !== null ? `${propertyData?.ParkingTotal}` : ""}`}
@@ -455,7 +455,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
               Water:
               </p>
               <p className="text-[#000] md:text-[17px] text-[15px] font-[400] ">
-              {`${propertyData?.WaterSource !== null ? `${propertyData?.WaterSource}` : ""}`}
+              {`${propertyData?.Water !== null ? `${propertyData?.Water}` : ""}`}
               </p>
             </div>         
             

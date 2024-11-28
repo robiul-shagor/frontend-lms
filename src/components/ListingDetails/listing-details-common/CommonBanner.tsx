@@ -30,21 +30,16 @@ const CommonBanner = ({ style_3, data }: any) => {
     <div className="w-full font-poppins mb-">
       <div className="flex justify-between items-start ">
         <div className="flex flex-col justify-start items-start gap-0">
-          <h2 className="font-medium md:text-[26px] sm:text-[16px] text-sm">
-            {`${data?.StreetNumber !== null ? `${data?.StreetNumber} -` : ""} ${
-            data?.StreetName
-            } ${data?.StreetName} ${data?.StreetSuffix}`}
+          <h2 className="font-medium md:text-[26px] sm:text-[16px] text-sm !capitalize">
+            {`${data?.StreetNumber !== null ? `${data?.StreetNumber} -` : ""} ${data?.StreetName ? data.StreetName.charAt(0).toUpperCase() + data.StreetName.slice(1).toLowerCase() : ""} ${data?.StreetSuffix}`},
           </h2>
           <p className="md:text-[22px] sm:text-[16px] text-[12px]  text-[#7a7a7a] font-[500]">
             {`${data?.City !== null ? `${data?.City}` : ""}`}, {`${data?.CityRegion !== null ? `${data?.CityRegion}` : ""}`}
           </p>
           <div className="flex gap-2 items-center">
-          <div className="flex justify-center items-center text-[#7a7a7a] sm:text-[16px] text-[12px] bg-[#F8f8f8] border-1 border-[#7a7a7a]  rounded-[23px] w-fit h-[28px] px-2">
+          <div className="hidden justify-center items-center text-[#7a7a7a] sm:text-[16px] text-[12px] bg-[#F8f8f8] border-1 border-[#7a7a7a]  rounded-[23px] w-fit h-[28px] px-2">
             {`${data?.PropertyType !== null ? `${data?.PropertyType}` : ""}`}
             </div>
-          <p className="md:text-[18px] text-[16px] text-[#7a7a7a] font-[500] hidden">
-          Peel
-          </p>
           </div>
           {/* <p className="md:text-[15px] text-[13px] text-[#7a7a7a] font-[500]"></p> */}
         </div>
@@ -53,7 +48,7 @@ const CommonBanner = ({ style_3, data }: any) => {
           {
             data?.ClosePrice !== null && (
               <div className="text-black md:text-[26px] sm:text-[24px] text-[16px] font-[500] md:flex justify-end items-center">
-                Sold: ${`${data?.ClosePrice !== null ? `${data?.ClosePrice}` : ""}`}
+                Sold: ${`${data?.ClosePrice !== null ? `${data?.ClosePrice.toLocaleString()}` : ""}`}
               </div>
             )
           }
@@ -64,7 +59,7 @@ const CommonBanner = ({ style_3, data }: any) => {
               </div>
             ) }
             <div className={`text-black ${data?.ClosePrice !== null ? '' : 'md:text-[26px] sm:text-[24px]'}  text-[16px] font-[500] md:flex justify-end items-center`}>
-              Price: ${`${data?.ListPrice !== null ? `${data?.ListPrice}` : ""}`}
+              Price: ${`${data?.ListPrice !== null ? `${data?.ListPrice.toLocaleString()}` : ""}`}
             </div> 
           </div>
 

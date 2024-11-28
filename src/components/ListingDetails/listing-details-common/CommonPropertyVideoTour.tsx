@@ -12,11 +12,12 @@ const CommonPropertyVideoTour = ({ data }: any) => {
   return (
     <>
       <h4 className="mt-6 mb-3 md:text-[24px] font-normal font-abhaya">
-        Video Tour
+        Virtual Tour
       </h4>
       <div className="bg-white shadow4 border-20 p-15">
-        <div className="position-relative border-15 image-bg overflow-hidden z-1">
-          <Image src={imageUrl} alt="" className="lazy-img w-100" />
+        <div className="position-relative border-15 overflow-hidden z-1">
+          <iframe src={data?.VirtualTourURLUnbranded} className="border-0 w-full h-[500px]"></iframe>
+          {/* <Image src={imageUrl} alt="" className="lazy-img w-100" />
           <a
             onClick={() => setIsVideoOpen(true)}
             style={{ cursor: "pointer" }}
@@ -24,15 +25,15 @@ const CommonPropertyVideoTour = ({ data }: any) => {
             data-fancybox
           >
             <i className="fa-thin fa-play"></i>
-          </a>
+          </a> */}
         </div>
       </div>
       {/* video modal start */}
-      <VideoPopup
+      {/* <VideoPopup
         isVideoOpen={isVideoOpen}
         setIsVideoOpen={setIsVideoOpen}
         videoId={"tUP5S4YdEJo"}
-      />
+      /> */}
       {/* video modal end */}
     </>
   );

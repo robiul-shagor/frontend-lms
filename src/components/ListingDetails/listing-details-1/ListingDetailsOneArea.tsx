@@ -96,7 +96,7 @@ const ListingDetailsOneArea = () => {
     return <div className="error-message">{error}</div>;
   }
 
-  console.log(mediaData);
+  //console.log(mediaData);
 
   const selectHandler = (e: any) => {};
 
@@ -193,7 +193,7 @@ const ListingDetailsOneArea = () => {
                      <CommonAmenities data={propertyData} />
                   </div> */}
               <div className="property-video-tour my-3">
-                {/* <CommonPropertyVideoTour data={propertyData} /> */}
+                {/* <CommonPropertyVideoTour data={propertyData.value[0]} /> */}
               </div>
               <div className="my-3">
                 {/* <ComparableHomes /> */}

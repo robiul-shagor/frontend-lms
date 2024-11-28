@@ -75,7 +75,7 @@ const CommonPropertyOverview = ({ data }: CommonPropertyOverviewProps ) => {
     {
       id: 5,
       icon: icon_1,
-      value: data.LotDepth,
+      value: `${data.FrontageLength} X ${data.LotDepth}`,
       title: "Lot",
     },
     {
@@ -99,7 +99,7 @@ const CommonPropertyOverview = ({ data }: CommonPropertyOverviewProps ) => {
     {
       id: 9,
       icon: icon_1,
-      value: data.Acres,
+      value: data.LotSizeRangeAcres,
       title: "Acres",
     },
   ];
@@ -111,12 +111,12 @@ const CommonPropertyOverview = ({ data }: CommonPropertyOverviewProps ) => {
           {property_overview_data.map((item, index) => (
             <div
               key={item.id}
-              className={`md:w-[13%] sm:w-[25%] md:mb-0 mb-3 pb-2 flex justify-center sm:items-start items-center flex-col md:gap-2 gap-1 ${index === property_overview_data.length - 1
+              className={`md:w-[15%] sm:w-[25%] md:mb-0 mb-3 pb-2 flex justify-center sm:items-start flex-col md:gap-2 gap-1 ${index === property_overview_data.length - 0
                   ? ""
                   : "md:border-r border-[#b3b3b3]"
                 }`}
             >
-              <div className="flex items-center gap-1 ml-2">
+              <div className="flex gap-1 ml-2">
                 {item.title === "Sqft." ? (
                   <HiArrowPathRoundedSquare className="text-[#767575] w-[30px] md:w-[30px] h-[30px]  md:h-[30px]" />
                 ) : item.title === "Age" ? (
@@ -135,21 +135,24 @@ const CommonPropertyOverview = ({ data }: CommonPropertyOverviewProps ) => {
                   {item.title}
                 </span>
               </div>
-              <p className="text-black mt-2 md:text-[18px] sm:text-[16px] text-sm font-bold ml-3 text-center sm:w-[100px]">
+              <p className="text-black mt-2 md:text-[18px] sm:text-[16px] text-sm font-bold ml-3 sm:w-[100px]">
                 {item.value}
               </p>
             </div>
           ))}
+          <div className={`md:w-[30%] sm:w-[25%] md:mb-0 mb-3 pb-2 flex justify-center sm:items-start items-center flex-col md:gap-2 gap-1`}>
+            <button
+              onClick={() => handleButtonClick('Virtual Tour')}
+              className={`w-1/2 py-2 text-[16px] rounded font-semibold ${selectedButton === 'Virtual Tour' ? 'bg-[#7A5CFA] text-white' : 'bg-white text-[#333]'
+                }`}
+            >
+              Virtual Tour
+            </button>
+          </div>
         </div>
 
-        <div className="flex sm:hidden border w-full border-[#0000000A] rounded-full overflow-hidden">
-          <button
-            onClick={() => handleButtonClick('Virtual Tour')}
-            className={`w-1/2 py-2 text-[16px] font-semibold ${selectedButton === 'Virtual Tour' ? 'bg-[#7A5CFA] text-white' : 'bg-white text-[#333]'
-              }`}
-          >
-            Virtual Tour
-          </button>
+        <div className="flex hidden border w-full border-[#0000000A] rounded-full overflow-hidden">
+
           <button
             onClick={() => handleButtonClick('Request Info')}
             className={`w-1/2 py-2 text-[16px] font-semibold ${selectedButton === 'Request Info' ? 'bg-[#7A5CFA] text-white' : 'bg-white text-[#333]'
