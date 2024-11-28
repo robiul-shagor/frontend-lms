@@ -208,7 +208,7 @@ const Card = ({ item }: { item: any }) => {
 };
 
 export default async function NewListing() {
-  let data = await fetch('https://api-lms-alpha.vercel.app/api/properties/?page=1&PropertyType=Residential&MlsStatus=New&limit=8&PublicRemarks=Luxury&City=Toronto')
+  let data = await fetch('https://api-lms-alpha.vercel.app/api/properties/all-properties?City=Toronto&limit=10&PublicRemarks=Luxury')
   let posts = await data.json();
 
   return (
