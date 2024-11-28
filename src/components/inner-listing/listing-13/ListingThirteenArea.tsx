@@ -229,22 +229,26 @@ const ListingThirteenArea = () => {
     {
       label: "Detached",
       value: "Detached",
+    },    
+    {
+      label: "Semi Detached",
+      value: "Semi Detached",
+    },
+    {
+      label: "Condo",
+      value: "Condo",
+    },
+    {
+      label: "Townhouse",
+      value: "Townhouse",
+    },
+    {
+      label: "Land",
+      value: "Land",
     },
     {
       label: "Commercial",
-      value: "Commercial Retail",
-    },
-    {
-      label: "Vacant Land",
-      value: "Vacant Land",
-    },
-    {
-      label: "Farm",
-      value: "Farm",
-    },
-    {
-      label: "Office",
-      value: "Office",
+      value: "Commercial",
     },
   ];
 
@@ -705,20 +709,24 @@ const ListingThirteenArea = () => {
 
   const forSaleOptions = ["7 Days", "30 Days", "60 Days", "90 Days"];
   const bathOptions = ["0", "1+", "2+", "3+", "4+", "5+", "6+"];
+
   const typeOptions = [
     {
-      options: ["Detached", "Semi Detached", "Townhouse"],
+      heading: "Freehold",
+      options: ["Detached", "Semi Detached", "Link", "Townhouse", "Rural", "Cottage","Farm", "Mobile/Trailer", "Other" ],
     },
     {
-      options: ["Apartment", "Detached", "Semi Detached", "Townhouse"],
+      heading: "Condominiums",
+      options: ["Apartment", "Townhouse", "Detached", "Townhouse", "Leasehold","Semi Detached", "Common Element", "Time Share", "Other" ],
     },
     {
-      options: ["All Commercial", "Detached", "Semi Detached", "Townhouse"],
+      heading: "Commercial & Industrial",
+      options: ["Office", "Retail", "Industrial", "Business Sale", "Store with Apartment/Office", "Investment", "Farm", "Land", "Other"],
     },
   ];
 
-  const minOptions = ["$0", "$20", "$5,000", "$10,000", "$1,000,00", "$10,000,000"];
-  const maxOptions = ["$400", "$400,000", "$500,000", "$600,000", "$1,000,000", "$100,000,000"];
+  const minOptions = ["$0", "$150000", "$200000", "$250000", "$300000", "$350000" ,"$400000","$450000","$500000","$550000","$600000","$650000","$700000","$750000","$800000","$850000","$950000","$1050000","$1300000","$1550000","$1800000","$2050000", '$2550000' ];
+  const maxOptions = ["$500000", "$550000", "$600000", "$650000", "$700000", "$750000", "$800000","$850000","$950000","$1050000","$1300000","$1550000","$1800000","$2050000","$2550000","$3050000","$3550000","$4050000","$4550000","$5050000", "$5550000", "$6000000", "$6500000"];
 
   const searchOptions = [
     "Toronto",
@@ -850,7 +858,7 @@ const ListingThirteenArea = () => {
               </div>
 
               <CustomDropdown
-                options={propertySubTypes}
+                options={typeOptions}
                 placeholder="Type"
                 value={selectedPropertySubType}
                 style={
@@ -960,16 +968,16 @@ const ListingThirteenArea = () => {
       </div>
 
       <div className="w-full mx-auto md:flex hidden justify-between items-center flex-wrap gap-3 md:pt-[30px] py-4 pb-2 relative px-4">
-        {typeFilter.map((tab, index) => (
+        {mapTabs.map((tab, index) => (
           <div
             key={index}
             className={`flex justify-center px-8 py-1 rounded-[20px]  md:text-[18px] text-[15px] font-urbanist  items-center cursor-pointer ${
-              activeTab === tab.LookupValue
+              activeTab === tab.value
                 ? "bg-[#6965fd] text-white font-[500]"
                 : "border-1 border-[#b3b3b3] text-black font-normal"
             } `}
           >
-            <button onClick={() => handleActiveTab(tab.LookupValue)}>{tab.LookupValue}</button>
+            <button onClick={() => handleActiveTab(tab.value)}>{tab.value}</button>
           </div>
         ))}
       </div>
