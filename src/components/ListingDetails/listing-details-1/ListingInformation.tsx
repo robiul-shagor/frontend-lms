@@ -218,7 +218,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
                 Original Price: 
               </p>
               <p className="text-black md:text-[17px] text-[15px] font-[400]">
-                ${propertyData.OriginalListPrice.toLocaleString()}
+                ${propertyData?.OriginalListPrice.toLocaleString()}
               </p>
             </div>         
             
@@ -229,7 +229,7 @@ const DistinctiveOtherFee = ({ propertyData }: any) => {
                 Taxes: 
               </p>
               <p className="text-black md:text-[17px] text-[15px] font-[400]">
-                ${propertyData.TaxAnnualAmount.toLocaleString()}
+                ${propertyData?.TaxAnnualAmount.toLocaleString()}
               </p>
             </div>
           </div>
