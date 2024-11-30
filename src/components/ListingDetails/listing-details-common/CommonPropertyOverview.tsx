@@ -69,7 +69,7 @@ const CommonPropertyOverview = ({ data }: CommonPropertyOverviewProps ) => {
     {
       id: 4,
       icon: <HiArrowPathRoundedSquare />,
-      value: data.FrontageLength,
+      value: data.LivingAreaRange, 
       title: "Sqft.",
     },
     {
@@ -140,18 +140,20 @@ const CommonPropertyOverview = ({ data }: CommonPropertyOverviewProps ) => {
               </p>
             </div>
           ))}
-          <div className={`md:w-[30%] sm:w-[25%] md:mb-0 mb-3 pb-2 flex justify-center sm:items-start items-center flex-col md:gap-2 gap-1`}>
-            <button
-              onClick={() => handleButtonClick('Virtual Tour')}
-              className={`w-1/2 py-2 text-[16px] rounded font-semibold ${selectedButton === 'Virtual Tour' ? 'bg-[#7A5CFA] text-white' : 'bg-white text-[#333]'
-                }`}
-            >
-              Virtual Tour
-            </button>
-          </div>
+          { data?.VirtualTourURLUnbranded  !== null && (
+            <div className={`md:w-[30%] sm:w-[25%] md:mb-0 mb-3 pb-2 flex justify-center sm:items-start items-center flex-col md:gap-2 gap-1`}>
+              <button
+                onClick={() => handleButtonClick('Virtual Tour')}
+                className={`w-1/2 py-2 text-[16px] rounded font-semibold ${selectedButton === 'Virtual Tour' ? 'bg-[#7A5CFA] text-white' : 'bg-white text-[#333]'
+                  }`}
+              >
+                Virtual Tour
+              </button>
+            </div>
+          ) }
         </div>
 
-        <div className="flex hidden border w-full border-[#0000000A] rounded-full overflow-hidden">
+        <div className="hidden border w-full border-[#0000000A] rounded-full overflow-hidden">
 
           <button
             onClick={() => handleButtonClick('Request Info')}

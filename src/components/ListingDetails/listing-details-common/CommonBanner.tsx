@@ -31,10 +31,10 @@ const CommonBanner = ({ style_3, data }: any) => {
       <div className="flex justify-between items-start ">
         <div className="flex flex-col justify-start items-start gap-0">
           <h2 className="font-medium md:text-[26px] sm:text-[16px] text-sm !capitalize">
-            {`${data?.StreetNumber !== null ? `${data?.StreetNumber} -` : ""} ${data?.StreetName ? data.StreetName.charAt(0).toUpperCase() + data.StreetName.slice(1).toLowerCase() : ""} ${data?.StreetSuffix}`},
+            {`${data?.StreetNumber !== null ? `${data?.StreetNumber} -` : ""} ${data?.StreetName ? data.StreetName.charAt(0).toUpperCase() + data.StreetName.slice(1).toLowerCase() : ""} ${data?.StreetSuffix}`}
           </h2>
           <p className="md:text-[22px] sm:text-[16px] text-[12px]  text-[#7a7a7a] font-[500]">
-            {`${data?.City !== null ? `${data?.City}` : ""}`}, {`${data?.CityRegion !== null ? `${data?.CityRegion}` : ""}`}
+            {`${data?.City !== null ? `${data?.City}` : ""}`} {`${data?.CityRegion !== null ? `, ${data?.CityRegion}` : ""}`}
           </p>
           <div className="flex gap-2 items-center">
           <div className="hidden justify-center items-center text-[#7a7a7a] sm:text-[16px] text-[12px] bg-[#F8f8f8] border-1 border-[#7a7a7a]  rounded-[23px] w-fit h-[28px] px-2">
@@ -54,9 +54,13 @@ const CommonBanner = ({ style_3, data }: any) => {
           }
           <div className="flex md:flex-row flex-col md:justify-end justify-start md:items-center gap-2">
             { data?.ClosePrice == null && (
-              <div className="sm:flex hidden justify-center items-center text-white text-[12px] bg-[#6FE0A2]   rounded-[23px] w-[80.21px] h-[22px]">
-                {`${data?.TransactionType !== null ? `${data?.TransactionType}` : ""}`}
-              </div>
+              <>
+                { data?.OriginalListPriceUnit !== null && (
+                  <div className="sm:flex hidden justify-center items-center text-white text-[12px] bg-[#6FE0A2] rounded-[23px] w-[80.21px] h-[22px]">
+                    {`${data?.OriginalListPriceUnit !== null ? `${data?.OriginalListPriceUnit}` : ""}`}
+                  </div>
+                ) }
+              </>
             ) }
             <div className={`text-black ${data?.ClosePrice !== null ? '' : 'md:text-[26px] sm:text-[24px]'}  text-[16px] font-[500] md:flex justify-end items-center`}>
               Price: ${`${data?.ListPrice !== null ? `${data?.ListPrice.toLocaleString()}` : ""}`}
@@ -65,20 +69,24 @@ const CommonBanner = ({ style_3, data }: any) => {
 
           
           <p className=" text-[#7a7a7a] font-[500] md:text-[16px] sm:text-[14px] text-[12px] flex  justify-end md:text-right text-left">
-            Property Taxes: <span className="text-black ">${`${data?.TaxAnnualAmount !== null ? `${data?.TaxAnnualAmount}` : ""}`} {`(${data?.TaxYear})`}</span>
+            Property Taxes: <span className="text-black ">${`${data?.TaxAnnualAmount !== null ? `${data?.TaxAnnualAmount.toLocaleString()}` : ""}`} {`(${data?.TaxYear})`}</span>
           </p>
         </div>
       </div>
       <div className="flex justify-between items-center mt-1 ">
        
         <p className="md:text-[18px] text-[14px] font-[400] text-[#7c7c7c] md:mt-[50px] mt-2">
-          On Market:{" "}
-          <span
-            className="text-black md:text-[22px]
-          "
-          >
-            {data?.DaysOnMarket} Days
-          </span>
+          { data?.DaysOnMarket && (
+            <>          
+              On Market:{" "}
+              <span
+                className="text-black md:text-[22px]
+              "
+              >
+                {data?.DaysOnMarket} Days
+              </span>
+            </>
+          )}
         </p>
 
         <div className="md:flex justify-end items-start gap-[120px] sm:mt-5 mt-1">

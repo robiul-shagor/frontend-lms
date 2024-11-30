@@ -5,7 +5,7 @@ import UseShortedProperty from "@/hooks/useShortedProperty";
 import NiceSelect from "@/ui/NiceSelect";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, CSSProperties } from "react";
 import ReactPaginate from "react-paginate";
 import { IoGridOutline } from "react-icons/io5";
 import { GoArrowUpRight } from "react-icons/go";
@@ -24,6 +24,65 @@ import { BiSortAlt2 } from "react-icons/bi";
 import CustomDropdown from "@/components/common/CustomDropDown";
 import PriceDropDown from "@/components/common/PriceDropDown";
 import FilterMoreOptions from "@/components/common/FilterMoreOptions";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { fetchLisingPropertyData } from "@/services/api";
+import { HiOutlineArrowLongRight, HiOutlineArrowLongLeft } from "react-icons/hi2";
+import ClipLoader from "react-spinners/ClipLoader";
+
+import { Loader } from '@googlemaps/js-api-loader';
+import { MarkerClusterer } from "@googlemaps/markerclusterer";
+
+//Interface
+interface ErrorState {
+  message: string;
+}
+interface ApiResponse {
+  success: boolean;
+  value: Property[];
+  properties: Property[];
+  totalProperties: number  // Define 'properties' based on its structure in the API
+}
+
+interface Property {
+  id: number; // or number, based on your data
+  name: string;
+  fullAddress: string;
+  latitude: number; // Ensure this exists
+  longitude: number; // Ensure this exists
+  [key: string]: any; // For any other dynamic properties
+  getClusters: any
+}
+
+interface TypeFilterItem {
+  LegacyODataValue: string;
+  LookupKey: string;
+  LookupName: string;
+  LookupStatus: string;
+  LookupValue: string;
+  ModificationTimestamp: string;
+  Order: number;
+  ReplacedByLookupKey: string | null;
+  StatusDate: string;
+}
+
+
+interface Media {
+  ClassName: string;
+  MediaCategory: string;
+  MediaKey: string;
+  MediaModificationTimestamp: string;
+  MediaObjectID: string;
+  MediaStatus: string;
+  MediaType: string;
+  MediaURL: string;
+}
+type HandlePageChangePage = (page: number) => void;
+
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  handlePageChangePage: HandlePageChangePage;
+}
 
 const select_type: string[] = [
   "All",
@@ -117,23 +176,27 @@ const mapTabs = [
   },
   {
     label: "Detached",
-    value: "detached",
-  },
+    value: "Detached",
+  },    
   {
     label: "Semi Detached",
-    value: "semi-detached",
-  },
-  {
-    label: "Townhouse",
-    value: "townhouse",
+    value: "Semi Detached",
   },
   {
     label: "Condo",
-    value: "condo",
+    value: "Condo",
+  },
+  {
+    label: "Townhouse",
+    value: "Townhouse",
+  },
+  {
+    label: "Land",
+    value: "Land",
   },
   {
     label: "Commercial",
-    value: "commercial",
+    value: "Commercial",
   },
 ];
 
@@ -241,12 +304,322 @@ const ListingFourteenArea = () => {
     resetFilters();
   };
 
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const router = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const key: any = router.get("search");
+  const propertyType: any = router.get("propertyType");
+  const routerMain = useRouter();
+  const pathname = usePathname();
+
+  const [propertiesData, setpropertiesData] = useState<Property[]>([]);
   const [selectedType, setSelectedType] = useState("All");
   const [selectedSort, setSelectedSort] = useState("newest");
   const [showSort, setShowSort] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
+  const [propertyTypePages, setPropertyTypePages] = useState<Record<string, number>>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPages, setItemsPerPages] = useState(20); // Defaults to 10
+  const [totalProperties, setTotalProperties] = useState(0);
+  const [forSale, setForSale] = useState(false);
+  const [distanceTime, setDistanceTime] = useState<number | null | undefined>(
+    undefined
+  );
+
+  const [selectedForSaleValue, setselectedForSaleValue] = useState<string>('');
+  const [forSold, setForSold] = useState(false);
+  const [selectedSoldValue, setselectedSoldValue] = useState<string>('');
+  const [selectedPropertySubType, setselectedPropertySubType] = useState<string>('');
+  const [distanceSoldTime, setDistanceSoldTime] = useState<number | null | undefined>(
+    undefined
+  );
+
+  const [minPrice, setMinPrice] = useState<number | null>(null);
+
+  const [bedRooms, setBedRooms] = useState<string>('');  
+  const [bathRooms, setBathRooms] = useState<string>('');  
+  const [error, setError] = useState<string | null>(null);
+  const [errorText, setErrorText] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const [highlightedProperty, setHighlightedProperty] = useState(null);
+  const [infoWindow, setInfoWindow] = useState<google.maps.InfoWindow | null>(null);
+  const [markerClusterer, setMarkerClusterer] = useState<MarkerClusterer | null>(null);
+
+
+
+  const mapRef = useRef(null);
+
+  const apiKey = "AIzaSyBP-6bgmDYXRRWdOHP8EkTJpaZhZ7yc73w";
+
+  const getLatLngFromAddress = async (address:any) => {
+    
+    const endpoint = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+      address
+    )}&key=${apiKey}`;
+  
+    const response = await fetch(endpoint);
+    const data = await response.json();
+  
+    if (data.status === "OK" && data.results.length > 0) {
+      const location = data.results[0].geometry.location;
+      return {
+        latitude: location.lat,
+        longitude: location.lng,
+      };
+    } else {
+      console.error("Geocoding failed:", data.status, data.error_message);
+      return null;
+    }
+  };
+
+  const getAddress = (propertyDetails: any) => {
+      const { StreetNumber, StreetName, StreetSuffix, UnitNumber, PostalCode, City, StateOrProvince } = propertyDetails;
+      return `${UnitNumber ? UnitNumber + " - " : ""}${StreetNumber} ${StreetName} ${StreetSuffix}, ${City}, ${StateOrProvince}, ${PostalCode}`;
+  };
+
+  //Property Fetch
+  useEffect(() => {
+    // Reset current page to 1 when the property type changes
+    if (!propertyTypePages[propertyType]) {
+      setCurrentPage(1); // Start from page 1 if no page history exists for this propertyType
+    } else {
+      setCurrentPage(propertyTypePages[propertyType]); // Restore the last page visited for this propertyType
+    }
+  
+    const fetchData = async () => {
+      setIsLoading(true);
+  
+      let posts: any = [];
+      try {
+        // Build filters dynamically based on available state
+        const filters: any = {};
+  
+        if (key) {
+          filters.searchQuery = key;
+        }
+  
+        if (propertyType && propertyType !== 'All') {
+          filters.propertyType = propertyType;
+        }
+  
+        if (selectedPropertySubType) {
+          filters.propertySubType = selectedPropertySubType;
+        }
+  
+        if (forSale && distanceTime) {
+          filters.daysSinceChange = distanceTime;
+          filters.forSale = forSale;
+        }
+  
+        if (forSold && distanceSoldTime) {
+          filters.daysSoldSinceChange = distanceSoldTime;
+          filters.isSold = forSold;
+        }
+  
+        // Sanitize minPrice and maxPrice
+        if (minPrice !== null && !isNaN(minPrice)) {
+          filters.minPrice = minPrice;
+        }
+        if (maxPrice !== null && !isNaN(maxPrice)) {
+          filters.maxPrice = maxPrice;
+        }
+
+        if( bedRooms ) {
+          filters.bedRooms = bedRooms;
+        }    
+        
+        if( bathRooms ) {
+          filters.bathRooms = bathRooms;
+        }
+  
+        // Add pagination parameters
+        filters.page = currentPage;
+        filters.pageSize = itemsPerPages;
+  
+        let response: any;
+        response = await fetchLisingPropertyData(filters);
+  
+        if (!response || response.properties.length === 0) {
+          setErrorText("No items found with the selected filters.");
+          setpropertiesData([]); 
+        } else {  
+          // const enrichedProperties = response.properties.map((property: any) => {
+          //   const address = getAddress(property.propertyDetails); // Use address function
+          //   return { ...property, fullAddress: address };
+          // });
+
+          const enrichedProperties = await Promise.all(
+            response.properties.map(async (property: any) => {
+              const address = getAddress(property.propertyDetails);
+              const geoLocation = await getLatLngFromAddress(address);
+              return { ...property, fullAddress: address, geoLocation };
+            })
+          );
+
+          // const enrichedProperties = response.properties.map((property: any) => ({
+          //   const address = getAddress(property.propertyDetails);
+
+          //   ...property
+          // }));
+  
+          posts = enrichedProperties;
+  
+          setpropertiesData(posts);
+  
+          if (response.totalProperties > 0 ) {
+            setTotalProperties(response.totalProperties);
+          }
+  
+          setErrorText("");
+        }
+        setLoading(false);
+      } catch (err) {
+        console.log(err);
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unknown error occurred');
+        }
+      }
+      setIsLoading(false);
+    };
+  
+    fetchData();
+  }, [
+    currentPage, 
+    itemsPerPages, 
+    key, 
+    propertyType, 
+    propertyTypePages, 
+    distanceTime, 
+    forSale, 
+    forSold, 
+    distanceSoldTime, 
+    selectedPropertySubType, 
+    maxPrice, 
+    minPrice,
+    bathRooms,
+    bedRooms 
+  ]);
+
+  // Initialize Google Maps and Marker Clusterer
+  const mapRefs = useRef<HTMLDivElement>(null);
+  const mapMains = () => {
+    const map = new google.maps.Map(mapRefs.current!, {
+        zoom: 8,
+    });
+
+    const bounds = new google.maps.LatLngBounds();
+
+    const markers = propertiesData.map((property) => {
+        if (property.geoLocation.latitude && property.geoLocation.longitude) {
+          const marker = new google.maps.Marker({
+            position: { lat: property.geoLocation.latitude, lng: property.geoLocation.longitude },
+            title: property.fullAddress, // Add property details to the marker
+            map, // Attach the marker to the map (optional for MarkerClusterer)
+          });
+
+          // Extend bounds for each marker
+          bounds.extend(marker.getPosition()!);
+
+          // Store marker in property data
+          property.marker = marker;
+
+          return marker;
+        }
+        return null;
+    }).filter(marker => marker !== null);
+
+    // Adjust the map to fit all markers
+    if (markers.length > 0) {
+      map.fitBounds(bounds);
+    } else {
+      // If no markers, set default center and zoom
+      map.setCenter({ lat: 43.651070, lng: -79.347015 });
+      map.setZoom(9);
+    }
+
+    // Add clustering
+    const clusterer = new MarkerClusterer({ markers, map });
+    setMarkerClusterer(clusterer);
+
+    // Create a single InfoWindow instance
+    const newInfoWindow = new google.maps.InfoWindow();
+    setInfoWindow(newInfoWindow);
+  };
+
+  useEffect(() => {
+      if (!mapRefs.current || propertiesData.length === 0) return;
+
+      const loader = new Loader({
+          apiKey: apiKey,
+          version: 'weekly',
+      });
+
+      loader.load().then(() => {
+        mapMains();
+      });
+  }, [propertiesData, apiKey]);
+
+  const handleMouseEnter = (property: any) => {
+    if (!infoWindow || !property.marker) return;
+
+    const marker = property.marker;
+    const map = marker.getMap();
+    const position = marker.getPosition();
+
+    setHighlightedProperty(property);
+  
+    if (map && position) {
+      const bounds = new google.maps.LatLngBounds();
+      bounds.extend(position);
+
+      map.fitBounds(bounds);
+
+      infoWindow.setContent(`
+        <div>
+          <h4>${property.fullAddress}</h4>
+          <p>Price: $${property.propertyDetails.ListPrice}</p>
+          <p>Type: ${property.propertyDetails.PropertySubType}</p>
+        </div>
+      `);
+      infoWindow.open(property.marker.getMap(), property.marker);
+    }
+  };
+  
+  const handleMouseLeave = () => {
+    setHighlightedProperty(null);
+
+    if (infoWindow) {
+      infoWindow.close();
+      mapMains();
+    }
+  }; 
+  
+
+  // Modify enrichment
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Save the current page for the selected propertyType
+    setLoading(true);
+
+    setPropertyTypePages((prevState) => ({
+      ...prevState,
+      [propertyType]: page, // Store page for current property type
+    }));
+
+    window.scrollTo({
+      top: 0, // Scroll to the very top of the page
+      behavior: "smooth", // Smooth scroll for a better user experience
+    });
+  };
+  
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -312,23 +685,136 @@ const ListingFourteenArea = () => {
     setShowSort(false);
   };
 
+  // Calculate and pagination
+  const startIndex = (currentPage - 1) * itemsPerPages + 1;
+  const endIndex = Math.min(currentPage * itemsPerPages, totalProperties);
+  const totalPages = Math.ceil(totalProperties / itemsPerPages); // Calculate total pages
+
   const forSaleOptions = ['7 Days', '30 Days', '60 Days', '90 Days']
   const bathOptions = ['0', '1+', '2+', '3+', '4+', '5+', '6+']
   const typeOptions = [
-    { heading: 'Freehold', options: ['Detached', 'Semi Detached', 'Townhouse'] },
-    { heading: 'Condo', options: ['Apartment', 'Detached', 'Semi Detached', 'Townhouse'] },
-    { heading: 'Commercial', options: ['All Commercial', 'Detached', 'Semi Detached', 'Townhouse'] },
-  ]
-  const minOptions = ['$0', '$20', '$5,000', '$10,000', '$1,000,00'];
-  const maxOptions = ['$400', '$400,000', '$500,000', '$600,000', '$1,000,000'];
+    {
+      heading: "Freehold",
+      options: ["Detached", "Semi Detached", "Link", "Townhouse", "Rural", "Cottage","Farm", "Mobile/Trailer", "Other" ],
+    },
+    {
+      heading: "Condominiums",
+      options: ["Apartment", "Townhouse", "Detached", "Townhouse", "Leasehold","Semi Detached", "Common Element", "Time Share", "Other" ],
+    },
+    {
+      heading: "Commercial & Industrial",
+      options: ["Office", "Retail", "Industrial", "Business Sale", "Store with Apartment/Office", "Investment", "Farm", "Land", "Other"],
+    },
+  ];
+
+  const minOptions = ["$0", "$150000", "$200000", "$250000", "$300000", "$350000" ,"$400000","$450000","$500000","$550000","$600000","$650000","$700000","$750000","$800000","$850000","$950000","$1050000","$1300000","$1550000","$1800000","$2050000", '$2550000' ];
+  const maxOptions = ["$500000", "$550000", "$600000", "$650000", "$700000", "$750000", "$800000","$850000","$950000","$1050000","$1300000","$1550000","$1800000","$2050000","$2550000","$3050000","$3550000","$4050000","$4550000","$5050000", "$5550000", "$6000000", "$6500000"];
 
   const searchOptions = ['Toronto', 'Mississauga, Peel', 'Brampton, Peel', 'Caledon, Peel', 'Vaughan, York', 'Richmond Hill, York', 'Markham, York'];
 
+  const findActiveImageUrl = (media: Media[]): string => {
+    const activeImage = media.find(
+      (m) => m.MediaStatus === 'Active' && m.MediaType.startsWith('image')
+    );
+    return activeImage ? activeImage.MediaURL : ''; // Provide a fallback URL or handle
+  };
+
+  // Function to calculate visible pages
+  const getVisiblePages = (currentPage: number, totalPages: number): number[] => {
+    const maxVisiblePages = 3; // Number of visible pages at a time
+    const pages: number[] = [];
+
+    // Determine start and end of range
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    // Adjust range if close to edges
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    // Fill pages array
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+  
+  const visiblePages = getVisiblePages(currentPage, totalPages);
+
+  const handleDropdownChange = (value: string) => {
+    setForSale( true );
+    setLoading(  true );
+    setselectedForSaleValue(value);
+    setForSold(false); // Deactivate "For Sold"
+    setselectedSoldValue(''); // Clear the selected value for "For Sold"
+    setDistanceSoldTime(null); // Clear any numerical value for "For Sold"
+
+    const numericValue = value !== '' ? parseInt(value, 10) : null;    
+    setDistanceTime(numericValue);
+  };
+  const handleSoldChanges = ( value: string ) => {
+    setForSold( true );
+    setForSale( false );
+    setselectedSoldValue( value );
+    setLoading(  true );
+
+    // Reset "For Sale" dropdown
+    setselectedForSaleValue(''); // Clear the selected value for "For Sale"
+    setDistanceTime(null); 
+
+    const numericValue = value !== '' ? parseInt(value, 10) : null;    
+    setDistanceSoldTime(numericValue);
+  };
+  const handlePropertySubType = ( value: string ) => {
+    setLoading(  true );
+    setselectedPropertySubType(value);
+  };  
+
+  const handleBedRooms = ( value: string ) => {
+    setLoading(true);
+    setBedRooms(value);
+  };  
+  const handleBathRooms = ( value: string ) => {
+    setLoading(true);
+    setBathRooms(value);
+  };
+
+  const handlePriceSelect = (min: string | null, max: string | null) => {
+    const cleanedMin = min ? parseFloat(min.replace(/[$,]/g, '')) : null;
+    const cleanedMax = max ? parseFloat(max.replace(/[$,]/g, '')) : null;
+
+    setMinPrice(cleanedMin);
+    //setLoading( true );
+  };
+
+  const override: CSSProperties = {
+    display: "block",
+    margin: "0 auto",
+    borderColor: "red",
+  };
+
+  if (loading) {
+    return (
+      <div className="loading-spinner flex justify-center items-center text-center w-full h-[100vh]">
+        {" "}
+        <ClipLoader
+          color={"#ffffff"}
+          loading={loading}
+          cssOverride={override}
+          size={150}
+          aria-label="Loading Spinner"
+          data-testid="loader"
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="w-[100vw] mt-[130px] ">
-      <div className="w-[100vw]">
-     <div className="w-full md:block hidden py-[2px] px-[2px]">
-          <div className="md:flex justify-between items-center md:px-[22px] md:w-[96%] w-full m-auto">
+    <div className="w-[100vw] mt-[130px]">
+      <div className="w-[100vw] mx-auto">
+        <div className="w-full mx-auto md:block hidden py-[2px] px-4">
+          <div className="md:flex justify-between items-center w-full pr-1">
             <div className="md:flex justify-start items-center gap-2 w-full">
               {/* <div
                 className="w-[288px] flex relative justify-center items-center px-2 rounded-[8px] border border-[#b3b3b3] h-[40px]"
@@ -376,6 +862,10 @@ const ListingFourteenArea = () => {
                   options={forSaleOptions}
                   placeholder="For Sale"
                   width={"w-[50%]"}
+                  value={selectedForSaleValue}
+                  onSelect={(selectedValue) => {
+                    handleDropdownChange(selectedValue);
+                  }}
                   style={
                     "text-[16px] text-black rounded-l-[8px]   pl-3 pr-1 flex justify-between items-center h-full cursor-pointer"
                   }
@@ -388,6 +878,10 @@ const ListingFourteenArea = () => {
                   style={
                     "text-[16px] text-black rounded-l-[8px]   pl-3 pr-1 flex justify-between items-center h-full cursor-pointer"
                   }
+                  value={selectedSoldValue}
+                  onSelect={(selectedValue) => {
+                    handleSoldChanges(selectedValue);
+                  }}
                 />
               </div>
 
@@ -398,9 +892,12 @@ const ListingFourteenArea = () => {
                 style={
                   "h-[40px] flex px-2 justify-center items-center w-[95px] rounded-[8px] border border-[#b3b3b3] text-black cursor-pointer"
                 }
+                onSelect={(selectedValue) => {
+                  handlePropertySubType(selectedValue);
+                }}
               />
 
-              <PriceDropDown minOptions={minOptions} maxOptions={maxOptions} />
+              <PriceDropDown minOptions={minOptions} maxOptions={maxOptions} onSelect={handlePriceSelect}  />
 
               <CustomDropdown
                 options={bathOptions}
@@ -410,12 +907,19 @@ const ListingFourteenArea = () => {
                 style={
                   "h-[40px] px-6 flex w-[95px] justify-center items-center  rounded-[8px] border border-[#b3b3b3] text-black cursor-pointer"
                 }
+                onSelect={(selectedValue) => {
+                  handlePropertySubType(selectedValue);
+                }}
               />
               <CustomDropdown
                 options={bathOptions}
                 placeholder="Bath"
                 width={"95px"}
                 arrow={false}
+                value={bedRooms}
+                onSelect={(selectedValue) => {
+                  handleBedRooms(selectedValue);
+                }}
                 style={
                   "h-[40px] px-6 flex w-[95px]  justify-center items-center  rounded-[8px] border border-[#b3b3b3] text-black cursor-pointer"
                 }
@@ -433,9 +937,13 @@ const ListingFourteenArea = () => {
                 style={
                   "h-[40px] px-6 flex w-[124px] justify-center items-center  rounded-[8px] border border-[#b3b3b3] text-black cursor-pointer"
                 }
+                onSelect={(selectedValue) => {
+                  handleBathRooms(selectedValue);
+                }}
               />
             </div>
-            <div className="flex justify-end items-center  w-full gap-2">
+
+            <div className="flex justify-end items-center w-full gap-2 ml-1">
               <div
                 className="h-[40px] w-[89px] relative text-[16px] text-black rounded-[8px]  border border-[#b3b3b3] flex justify-center gap-1 items-center cursor-pointer"
                 onClick={() => handleShowSort()}
@@ -505,7 +1013,7 @@ const ListingFourteenArea = () => {
             </div>
          </div> */}
      
-      <div className="w-full md:flex hidden justify-center items-center flex-wrap   gap-8 md:pt-[30px] py-[2px]">
+      <div className="w-full mx-auto md:flex hidden justify-between items-center flex-wrap gap-3 md:pt-[30px] py-4 pb-2 relative px-4">
         {mapTabs.map((tab, index) => (
           <div
             key={index}
@@ -518,11 +1026,30 @@ const ListingFourteenArea = () => {
           </div>
         ))}
       </div>
+
       <div className="md:flex justify-between items-center pl-5 pt-3 ">
-            <div className=" text-[14px] text-black font-[500]">
-              Showing 1-8 of 1,230 results
+        <div className=" text-[14px] text-black font-[500]">
+          { errorText ? (
+            <div className=" text-[14px] text-[#4d4d4d] font-[400]">
+              Showing{" "}
+              <span className="font-abhaya text-black">
+                0
+              </span>{" "}
+              results
             </div>
-          </div>
+          ) : (
+            <div className=" text-[14px] text-[#4d4d4d] font-[400]">
+              Showing{" "}
+              <span className="font-abhaya text-black">
+                {" "}
+                {startIndex}-{endIndex} of {totalProperties}
+              </span>{" "}
+              results 
+            </div>
+          ) }
+        </div>
+      </div>
+
       <div className="md:flex">
         <div className="md:w-[50%] w-full max-h-[100vh] overflow-y-auto">
           <div className="w-full">
@@ -531,11 +1058,14 @@ const ListingFourteenArea = () => {
                 <div className="flex justify-center items-center mt-0">
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4 ">
-                    {[ {type: 'For Sale'}, {type: 'For Sale'}, {type: 'For Sale'}, {type: 'For Sale'}, {type: 'For Sale'}, {type: 'For Sale'}]?.map(
+                    { propertiesData
+                      ?.filter((item: any) => findActiveImageUrl(item.media))?.map(
                         (item: any, index: any) => (
                           <div
                             key={index}
-                            className="rounded-lg shadow-md"
+                            className={`property-item rounded-lg shadow-md ${highlightedProperty === item ? 'highlighted' : ''}`}
+                            onMouseEnter={() => handleMouseEnter(item)}
+                            onMouseLeave={handleMouseLeave}
                             // data-wow-delay={item.data_delay_time}
                           >
                              <div className="listing-card-one style-two ">
@@ -543,7 +1073,7 @@ const ListingFourteenArea = () => {
                                 <div className="relative overflow-hidden pt-[6px]">
                                   <div className="absolute w-full top-5 left-0 px-[7px]  flex justify-between items-center">
                                     <div className={` font-[500] rounded-r-[8px] text-[12px] font-urbanist px-2 w-auto h-[21.0px] flex justify-center items-center text-white text-black-500 ${item?.type === 'SOLD 02/20/2024' ? 'bg-[#EB272A]' : item?.type === 'For Rent' ? 'bg-[#6965FD]': 'bg-[#6CCFAC]'} `}>
-                                      {/* {item.ListPriceUnit} */}{item?.type}
+                                      {item.propertyDetails.PropertySubType}
                                     </div>
                                     <Link
                                       href="#"
@@ -557,9 +1087,10 @@ const ListingFourteenArea = () => {
                                   <div className="w-[96%] pt-1 mx-auto">
                                     <Image
                                       alt=""
-                                      src={"/assets/images/listing/img_15.jpg"}
+                                      src={findActiveImageUrl(item.media)}
                                       width={400}
                                       height={300}
+                                      className="h-[300px] object-cover w-full"
                                     />
                                   </div>
                                 </div>
@@ -567,11 +1098,11 @@ const ListingFourteenArea = () => {
                               <div className="property-info px-2 mt-1 pt-2 pb-[2px]">
                                 <div className="d-flex flex-wrap align-items-start justify-content-between ">
                                   <Link
-                                    href={`/listing_details_01?id=${1}`}
+                                    href={`/listing_details_01?id=${item.propertyDetails.ListingKey}`}
                                     className="text-[20px] text-black  font-urbanist font-[500]"
                                     style={{ maxWidth: "90%" }}
                                   >
-                                    246 Leadership Drive,
+                                    {`${item.propertyDetails?.StreetNumber !== null ? `${item.propertyDetails?.StreetNumber} -` : ""} ${item.propertyDetails?.StreetName ? item.propertyDetails.StreetName.charAt(0).toUpperCase() + item.propertyDetails.StreetName.slice(1).toLowerCase() : ""} ${item.propertyDetails?.StreetSuffix}`}
                                   </Link>
                                   <p className="text-[12px] text-[#999999]">
                                     1 hour old
@@ -579,10 +1110,10 @@ const ListingFourteenArea = () => {
                                 </div>
                                 <div className="d-flex flex-wrap align-items-center mt-1 justify-content-between ">
                                   <p className="text-[14px] text-[#999999]">
-                                    Brampton, On, L6Y 3M9
+                                  {`${item.propertyDetails?.UnparsedAddress !== null ? `${item.propertyDetails?.UnparsedAddress}` : ""}`}
                                   </p>
                                   <p className="text-[14px] text-[#999999]">
-                                    Sandighram-Wellington
+                                    {`- ${item?.City !== null ? `${item?.City}` : ""}`}
                                   </p>
                                 </div>
 
@@ -590,7 +1121,7 @@ const ListingFourteenArea = () => {
                                   <li className="flex justify-start items-start gap-1">
                                     <LiaBedSolid className="text-black text-xl mt-1" />
                                     <p className="text-black text-[16px]  font-[400]">
-                                      {"03"}
+                                      {item.propertyDetails.BedroomsTotal ? `${item.propertyDetails.BedroomsTotal}` : ""}
                                     </p>
                                     <p className="text-[#999999] text-[16px] font-[400] font-urbanist">
                                       bed
@@ -599,7 +1130,7 @@ const ListingFourteenArea = () => {
                                   <li className="flex justify-start items-start gap-1">
                                     <PiBathtub className="text-black text-xl mt-1" />
                                     <p className="text-black text-[16px]  font-[400]">
-                                      {"02"}
+                                      {item.propertyDetails.BathroomsTotalInteger ? `${item.propertyDetails.BathroomsTotalInteger}` : ""}
                                     </p>
                                     <p className="text-[#999999]  text-[16px] font-[400] font-urbanist">
                                       bath
@@ -608,7 +1139,7 @@ const ListingFourteenArea = () => {
                                   <li className="flex justify-start items-start gap-1">
                                     <PiGarage className="text-black text-xl mt-1" />
                                     <p className="text-black text-[16px]  font-[400]">
-                                      {"02"}
+                                      {item.propertyDetails.ParkingSpaces ? `${item.propertyDetails.ParkingSpaces}` : ""}
                                     </p>
                                     <p className="text-[#999999] text-[16px] font-[400] font-urbanist">
                                       garage
@@ -618,10 +1149,23 @@ const ListingFourteenArea = () => {
 
                                 <div className="pl-footer py-1 border-t  border-[#a8a8a8] border-dashed d-flex align-items-center justify-content-between">
                                   <div className=" text-[32px] font-[500]  text-[#000] ">
-                                    $1,720,000
+                                    {
+                                      item.propertyDetails.PriceChangeTimestamp ? (
+                                        <span className="flex items-center gap-2">
+                                          <span className="line-through font-normal text-[#999] text-[24px]">
+                                            ${item.propertyDetails.OriginalListPrice}
+                                          </span>
+                                          <span className="text-[#FF4A4A] font-semibold">
+                                            ${item.propertyDetails.ListPrice}
+                                          </span>
+                                        </span>
+                                      ) : (
+                                        "$" + item.propertyDetails.ListPrice
+                                      )
+                                    }
                                   </div>
                                   <Link
-                                    href={`/listing_details_01?id=${1}`}
+                                    href={`/listing_details_01?id=${item.propertyDetails.ListingKey}`}
                                     className="h-10 w-10 bg-[#6965fd] flex justify-center items-center"
                                   >
                                     <i className="bi text-white bi-arrow-up-right"></i>
@@ -641,7 +1185,9 @@ const ListingFourteenArea = () => {
                 </div>
               ) : (
                 <div className="flex flex-col justify-center items-center gap-9 w-full m-auto">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9]?.map((item: any, index: any) => (
+                  {propertiesData
+                  ?.filter((item: any) => findActiveImageUrl(item.media))
+                  .map((item: any, index: any) => (
                     <div
                       key={index}
                       className="md:flex justify-start items-start md:h-[200px] h-auto w-full bg-[#f4f4f4]"
@@ -649,19 +1195,19 @@ const ListingFourteenArea = () => {
                       <div className="md:w-[55%] w-full h-full relative">
                         <Image
                           alt=""
-                          src={"/assets/images/listing/img_15.jpg"}
+                          src={findActiveImageUrl(item.media)}
                           width={400}
-                          height={400}
+                          height={300}
                           className="w-full h-full bg-contain"
                         />
                         <div className="absolute left-0  top-3 px-2 flex justify-center font-[500] text-[12px]  bg-[#ffffff] w-[68.94px] h-[21.0px] items-center">
-                          For Sale
+                          {item.propertyDetails.TransactionType}
                         </div>
                       </div>
                       <div className=" px-3 py-3 w-full">
                         <div className="md:w-[95%] w-full mx-auto flex justify-between items-center">
                         <h2 className="text-[26px] text-black  font-[500]">
-                            143 Leadership Dr,
+                          {item.propertyDetails.CrossStreet}
                           </h2>
                           <div className="flex justify-end items-center gap-2">
                             <Link href="#">
@@ -678,17 +1224,17 @@ const ListingFourteenArea = () => {
 
                         <div className="flex justify-between items-center w-full md:w-[95%] mx-auto">
                             <div className="  text-[18px] font-[400]  text-[#545454] mt-2">
-                              Brampton, Ontario L6Y5X9
+                              {item.propertyDetails.UnparsedAddress}
                             </div>
                             <div className="  text-[18px] font-[400]  text-[#545454] mt-2">
-                              Sandighram-Wellington
+                              {item.propertyDetails.City}
                             </div>
                           {/* </div> */}
                         </div>
                         <div className="md:w-[95%] w-full mx-auto flex flex-wrap justify-between items-center  md:mt-[40px] mt-[20px]">
                           <div className="md:w-auto w-[32%]">
                             <p className="text-[16px] text-black font-[400]">
-                              Detached
+                              {item.propertyDetails.PropertySubType}
                             </p>
                             <p className="text-[#626262] text-[16px] ">Type</p>
                           </div>
@@ -703,7 +1249,7 @@ const ListingFourteenArea = () => {
                           </div>
                           <div className="md:w-auto w-[32%]">
                             <p className="text-[16px] text-center text-black font-[400]">
-                              3
+                              0{item.propertyDetails.BedroomsTotal ? `${item.propertyDetails.BedroomsTotal}` : ""}
                             </p>
                             <p className="text-[#626262] text-[16px] ">bed</p>
                           </div>
@@ -718,7 +1264,7 @@ const ListingFourteenArea = () => {
                           </div>
                           <div className="md:w-auto w-[32%]">
                             <p className="text-[16px]  text-center text-black font-[400]">
-                              2
+                              0{item.propertyDetails.BathroomsTotalInteger ? `${item.propertyDetails.BathroomsTotalInteger}` : ""}
                             </p>
                             <p className="text-[#626262] text-[16px] ">bath</p>
                           </div>
@@ -733,7 +1279,7 @@ const ListingFourteenArea = () => {
                           </div>
                           <div className="md:w-auto w-[32%]">
                             <p className="text-[16px]  text-center text-black font-[400]">
-                              1
+                              0{item.propertyDetails.KitchensTotal ? `${item.propertyDetails.KitchensTotal}` : ""}
                             </p>
                             <p className="text-[#626262] text-[16px] ">
                               Kitchen
@@ -750,7 +1296,7 @@ const ListingFourteenArea = () => {
                           </div>
                           <div className="md:w-auto w-[32%]">
                             <p className="text-[16px]  text-center text-black font-[400]">
-                              1500-2000
+                              {item.propertyDetails.LivingAreaRange ? `${item.propertyDetails.LivingAreaRange}` : ""}
                             </p>
                             <p className="text-[#626262] text-[16px] ">sqft</p>
                           </div>
@@ -765,7 +1311,7 @@ const ListingFourteenArea = () => {
                           </div>
                           <div className="md:w-auto w-[32%]">
                             <p className="text-[16px]  text-center text-black font-[400]">
-                              02
+                              {item.propertyDetails.GarageParkingSpaces ? `${item.propertyDetails.GarageParkingSpaces}` : ""}
                             </p>
                             <p className="text-[#626262] text-[16px] ">
                               Garages
@@ -774,11 +1320,26 @@ const ListingFourteenArea = () => {
                         </div>
                         <div className="md:w-[95%] w-full mx-auto flex justify-between items-center mt-[15px]">
                           <p className=" text-[20px] text-black font-[500]">
-                          $13,245,000
+                            {
+                              item.propertyDetails.PriceChangeTimestamp ? (
+                                <span className="flex items-center gap-2">
+                                  <span className="line-through font-normal text-[#999] text-[24px]">
+                                    ${item.propertyDetails.OriginalListPrice}
+                                  </span>
+                                  <span className="text-[#FF4A4A] font-semibold">
+                                    ${item.propertyDetails.ListPrice}
+                                  </span>
+                                </span>
+                              ) : (
+                                "$" + item.propertyDetails.ListPrice
+                              )
+                            }
                           </p>
-                          <div className="flex bg-[#6965FD]  justify-center items-center w-[37.37px] h-[37.37px]">
-                            <GoArrowUpRight className="text-white text-[17px]" />
-                          </div>
+                          <Link href={`/listing_details_01?id=${item.propertyDetails.ListingKey}`}>
+                            <div className="flex bg-[#6965FD]  justify-center items-center w-[37.37px] h-[37.37px]">
+                              <GoArrowUpRight className="text-white text-[17px]" />
+                            </div>
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -787,21 +1348,60 @@ const ListingFourteenArea = () => {
               )}
             </div>
           </div>
-        </div>
-        <div className="md:w-[50%] w-full h-[100vh]">
-          <div id="google-map-area" className="h-100">
-            <div className="google-map-home" id="contact-google-map">
-              <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d83088.3595592641!2d-105.54557276330914!3d39.29302101722867!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x874014749b1856b7%3A0xc75483314990a7ff!2sColorado%2C%20USA!5e0!3m2!1sen!2sbd!4v1699764452737!5m2!1sen!2sbd"
-                width="600"
-                height="450"
-                style={{ border: 0 }}
-                allowFullScreen={true}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                className="w-100 md:h-full h-[50vh]"
-              ></iframe>
+
+          <div className="flex justify-center items-center gap-4 mb-[80px]">
+            <div className="flex gap-2 justify-between items-center text-black">
+              <div
+              className={`flex justify-start gap-2 items-center text-[17px] cursor-pointer ${
+                currentPage === 1 ? "text-gray-400 cursor-not-allowed" : "text-black"
+              }`}
+              onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+            >
+              <HiOutlineArrowLongLeft />
+              <p>Prev</p>
             </div>
+              {/* Render visible pages */}
+              {visiblePages.map((page) => (
+                <div
+                  key={page}
+                  className={`hover:text-white hover:bg-[#aeacff] hover:p-2 w-[30px] h-[30px] flex justify-center items-center cursor-pointer text-[17px] ${
+                    currentPage === page ? "bg-[#6965FD] text-white" : ""
+                  }`}
+                  onClick={() => handlePageChange(page)}
+                >
+                  {page}
+                </div>
+              ))}
+
+              {/* Add ellipsis if not showing the last page */}
+              {totalPages > visiblePages[visiblePages.length - 1] && (
+                <div className="text-[17px]">...</div>
+              )}
+
+              {/* Render the last page if it's not in the visible range */}
+              {totalPages > visiblePages[visiblePages.length - 1] && (
+                <div
+                  className="hover:text-white hover:bg-[#aeacff] hover:p-2 w-[30px] h-[30px] flex justify-center items-center cursor-pointer text-[17px]"
+                  onClick={() => handlePageChange(totalPages)}
+                >
+                  {totalPages}
+                </div>
+              )}
+            </div>
+
+            {/* Last page navigation */}
+            <div
+              className="flex justify-start gap-2 items-center text-[17px] text-black cursor-pointer"
+              onClick={() => handlePageChange(totalPages)}
+            >
+              <p>Next</p>
+              <HiOutlineArrowLongRight />
+            </div>
+          </div>
+        </div>
+
+        <div className="md:w-[50%] w-full h-[100vh]">
+          <div id="google-map-area" className="h-100" ref={mapRefs}>
           </div>
         </div>
         {/* <div className="col-xxl-6 col-lg-7">

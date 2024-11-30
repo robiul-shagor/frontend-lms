@@ -7,7 +7,7 @@ import NiceSelect from "@/ui/NiceSelect";
 import Image from "next/image";
 // import ReactPaginate from "react-paginate";
 import ClipLoader from "react-spinners/ClipLoader";
-import { fetchMediaPropertyData, fetchLisingPropertyData, fetchPropertyTypes, fetchPropertySubTypes } from "@/services/api";
+import { fetchLisingPropertyData } from "@/services/api";
 import { LiaBedSolid } from "react-icons/lia";
 import { PiBathtub } from "react-icons/pi";
 import { PiGarage } from "react-icons/pi";
@@ -27,7 +27,6 @@ import { IoGridOutline } from "react-icons/io5";
 import { GoArrowUpRight } from "react-icons/go";
 import SearchFilters from "../listing-14/SearchFilters";
 import { HiOutlineArrowLongRight, HiOutlineArrowLongLeft } from "react-icons/hi2";
-import { set } from "mongoose";
 import CustomDropdown from "@/components/common/CustomDropDown";
 import PriceDropDown from "@/components/common/PriceDropDown";
 import FilterMoreOptions from "@/components/common/FilterMoreOptions";
@@ -313,68 +312,6 @@ const ListingThirteenArea = () => {
 
   const [propertyTypePages, setPropertyTypePages] = useState<Record<string, number>>({});
   const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const fetchLookupData = async () => {
-      try {
-        const propertyTypes = await fetchPropertyTypes();
-
-        const allOption = {
-          LegacyODataValue: "All",
-          LookupKey: "all",
-          LookupName: "PropertyType",
-          LookupStatus: "Active", 
-          LookupValue: "All",
-          ModificationTimestamp: new Date().toISOString(),
-          Order: 0, 
-          ReplacedByLookupKey: null,
-          StatusDate: new Date().toISOString(),
-        };
-  
-        // Prepend "All" option to the propertyTypes
-        const combinedData = [allOption, ...propertyTypes.value];
-
-        // Remove duplicates based on LookupValue
-        const uniqueData = combinedData.filter(
-          (value, index, self) =>
-            index === self.findIndex((t) => t.LookupValue === value.LookupValue)
-        );
-
-        // Set the state with unique values
-        setTypeFilter(uniqueData);
-      } catch (error) {
-        console.error("Error fetching lookup data:", error);
-      }
-    };
-  
-    fetchLookupData();
-  }, []);
-
-  useEffect(() => {
-    const fetchSubPropertFilterData = async () => {
-      try {
-        const response = await fetchPropertySubTypes();
-        // Transform the fetched data into the required structure
-        const transformedData = response.value
-                                .map((item: any) => item.LookupValue) // Extract the LookupValue
-                                .filter((value: any, index: number, self: any[]) => self.indexOf(value) === index); // Remove duplicates
-        
-        // Wrap the data into the options format
-        const typeOptions = [
-          {
-            options: transformedData,
-          },
-        ];
-        
-        setPropertySubTypes(typeOptions); 
-      } catch (error) {
-        console.error('Error fetching Property SubTypes:', error);
-      }
-      setLoading(false);
-    };
-
-    fetchSubPropertFilterData();
-  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -1067,7 +1004,6 @@ const ListingThirteenArea = () => {
                                   style={{ maxWidth: "90%" }}
                                 >
                                   {`${item.propertyDetails?.UnitNumber !== null ? `${item.propertyDetails?.UnitNumber} -` : ""} ${ item.propertyDetails?.StreetNumber} ${item.propertyDetails?.StreetName} ${item.propertyDetails?.StreetSuffix}`}
-                                  
                                 </Link>
                                 <p className="text-[12px] text-[#999999]">
                                   {timeAgo(item.propertyDetails.ModificationTimestamp)}
@@ -1254,7 +1190,7 @@ const ListingThirteenArea = () => {
                           </div>
                           <div className="md:w-auto w-[32%]">
                             <p className="text-[20px] text-black font-[400]">
-                              1500-2000
+                              {item.propertyDetails.LivingAreaRange ? `${item.propertyDetails.LivingAreaRange}` : ""}
                             </p>
                             <p className="text-[#626262] text-[16px] ">sqft</p>
                           </div>
@@ -1269,7 +1205,7 @@ const ListingThirteenArea = () => {
                           </div>
                           <div className="md:w-auto w-[32%]">
                             <p className="text-[20px] text-black font-[400]">
-                              02
+                              {item.propertyDetails.GarageParkingSpaces ? `${item.propertyDetails.GarageParkingSpaces}` : ""}
                             </p>
                             <p className="text-[#626262] text-[16px] ">
                               Garages
@@ -1278,7 +1214,20 @@ const ListingThirteenArea = () => {
                         </div>
                         <div className="md:w-[95%] w-full mx-auto flex justify-between items-center mt-[40px]">
                           <p className=" text-[26px] text-black font-[500]">
-                            {"$" + item.propertyDetails.ListPrice}
+                            {
+                              item.propertyDetails.PriceChangeTimestamp ? (
+                                <span className="flex items-center gap-2">
+                                  <span className="line-through font-normal text-[#999] text-[24px]">
+                                    ${item.propertyDetails.OriginalListPrice}
+                                  </span>
+                                  <span className="text-[#FF4A4A] font-semibold">
+                                    ${item.propertyDetails.ListPrice}
+                                  </span>
+                                </span>
+                              ) : (
+                                "$" + item.propertyDetails.ListPrice
+                              )
+                            }
                           </p>
                           <Link href={`/listing_details_01?id=${item.propertyDetails.ListingKey}`}>
                             <div className="flex bg-[#6965FD] justify-center items-center w-[47.37px] h-[47.37px]">
