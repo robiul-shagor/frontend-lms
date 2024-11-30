@@ -67,10 +67,11 @@ const CommonBanner = ({ style_3, data }: any) => {
             </div> 
           </div>
 
-          
+          { data?.TaxAnnualAmount !== null && (
           <p className=" text-[#7a7a7a] font-[500] md:text-[16px] sm:text-[14px] text-[12px] flex  justify-end md:text-right text-left">
             Property Taxes: <span className="text-black ">${`${data?.TaxAnnualAmount !== null ? `${data?.TaxAnnualAmount.toLocaleString()}` : ""}`} {`(${data?.TaxYear})`}</span>
           </p>
+          ) }
         </div>
       </div>
       <div className="flex justify-between items-center mt-1 ">
